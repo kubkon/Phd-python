@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>Auctions/Digital Marketplace/asymmetries/asymmetries.py</string>
+	<string>Auctions/Digital Marketplace/simulation/tatonnement.py</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -33,7 +33,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>444</integer>
+			<integer>0</integer>
 		</dict>
 		<key>Auctions/Digital Marketplace/bounds/calc_bounds.py</key>
 		<dict>
@@ -62,6 +62,20 @@
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>22</integer>
+		</dict>
+		<key>Auctions/Digital Marketplace/simulation/tatonnement.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>26</integer>
+				<key>line</key>
+				<integer>51</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>8</integer>
 		</dict>
 		<key>Auctions/Digital Marketplace/test/my_test.py</key>
 		<dict>
@@ -181,6 +195,7 @@
 	<key>openDocuments</key>
 	<array>
 		<string>Auctions/Digital Marketplace/asymmetries/asymmetries.py</string>
+		<string>Auctions/Digital Marketplace/simulation/tatonnement.py</string>
 	</array>
 	<key>shellVariables</key>
 	<array>
@@ -196,6 +211,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{304, 0}, {1376, 1028}}</string>
+	<string>{{302, 0}, {978, 1002}}</string>
 </dict>
 </plist>
