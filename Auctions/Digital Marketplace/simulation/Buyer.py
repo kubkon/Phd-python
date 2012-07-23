@@ -37,9 +37,16 @@ class Buyer:
   @property
   def price_weight(self):
     '''
-    Returns requested price weight of this bidder
+    Returns requested price weight of this buyer
     '''
     return self.price_weight
+    
+  @property
+  def service(self):
+    '''
+    Returns service requested by this buyer
+    '''
+    return self.service
   
 
 class BuyerTests(unittest.TestCase):
