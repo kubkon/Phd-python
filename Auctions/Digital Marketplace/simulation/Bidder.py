@@ -32,8 +32,6 @@ class Bidder:
     self.cost = np.random.uniform(0,1)
     # Initialize reputation to default value
     self.reputation = 0.5
-    # Initialize won/lost array to empty
-    self.history = []
     # Assign total capacity available to the bidder
     self.total_capacity = total_capacity
   
@@ -55,7 +53,7 @@ class Bidder:
     bid = 0.0
     if price_weight != 0.0 and price_weight != 1.0 and self.reputation != enemy_reputation:
       # Estimate equilibrium bidding strategy functions (bids-hat)
-      bids_hat, costs_hat, dummy, dummy = NumericalToolbox.estimate_bid_hat_functions(price_weight, [self.reputation, enemy_reputation])
+      bids_hat, costs_hat = NumericalToolbox.estimate_bid_hat_function(price_weight, [self.reputation, enemy_reputation])
       # Calculate bid
       dist = map(lambda x: np.abs(x - ((1-price_weight)*self.reputation + self.cost*price_weight)), costs_hat)
       bid = (bids_hat[dist.index(min(dist))] - (1-price_weight)*self.reputation) / price_weight

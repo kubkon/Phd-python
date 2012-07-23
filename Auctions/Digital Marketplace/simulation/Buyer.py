@@ -35,12 +35,25 @@ class Buyer:
     self.service = service
   
   @property
+  def prices(self):
+    '''
+    Returns prices paid array
+    '''
+    return self.prices
+  
+  def add_price(self, price):
+    '''
+    Adds price to the prices paid array
+    '''
+    self.prices += [price]
+  
+  @property
   def price_weight(self):
     '''
     Returns requested price weight of this buyer
     '''
     return self.price_weight
-    
+  
   @property
   def service(self):
     '''
