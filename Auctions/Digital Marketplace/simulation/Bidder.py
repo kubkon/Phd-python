@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 # encoding: utf-8
 """
 Bidder.py
@@ -7,7 +7,6 @@ Created by Jakub Konka on 2012-07-23.
 Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
 
-from __future__ import division
 import sys
 import os
 import unittest
@@ -16,7 +15,7 @@ import numpy as np
 from NumericalToolbox import *
 
 
-class Bidder:
+class Bidder(object):
   '''
   Represents bidder in the Digital Marketplace; hence
   a network operator
@@ -29,18 +28,27 @@ class Bidder:
     total_capacity -- Total capacity available
     '''
     # Generate pseudo-random cost of this bidder
-    self.cost = np.random.uniform(0,1)
+    self._cost = np.random.uniform(0,1)
     # Initialize reputation to default value
-    self.reputation = 0.5
+    self._reputation = 0.5
     # Assign total capacity available to the bidder
-    self.total_capacity = total_capacity
+    self._total_capacity = total_capacity
+    # Initialize available capacity
+    self._available_capacity = total_capacity
   
   @property
   def reputation(self):
     '''
     Returns current reputation of the bidder
     '''
-    return self.reputation
+    return self._reputation
+  
+  @property
+  def available_capacity(self):
+    '''
+    Returns available capacity
+    '''
+    return self._available_capacity
   
   def submit_bid(self, price_weight, enemy_reputation):
     '''
@@ -51,18 +59,35 @@ class Bidder:
     enemy_reputation -- Reputation of the other bidder
     '''
     bid = 0.0
-    if price_weight != 0.0 and price_weight != 1.0 and self.reputation != enemy_reputation:
+    if price_weight != 0.0 and price_weight != 1.0 and self._reputation != enemy_reputation:
       # Estimate equilibrium bidding strategy functions (bids-hat)
-      bids_hat, costs_hat = NumericalToolbox.estimate_bid_hat_function(price_weight, [self.reputation, enemy_reputation])
+      bids_hat, costs_hat = NumericalToolbox.estimate_bid_hat_function(price_weight, [self._reputation, enemy_reputation])
       # Calculate bid
-      dist = map(lambda x: np.abs(x - ((1-price_weight)*self.reputation + self.cost*price_weight)), costs_hat)
-      bid = (bids_hat[dist.index(min(dist))] - (1-price_weight)*self.reputation) / price_weight
+      dist = map(lambda x: np.abs(x - ((1-price_weight)*self._reputation + self._cost*price_weight)), costs_hat)
+      bid = (bids_hat[dist.index(min(dist))] - (1-price_weight)*self._reputation) / price_weight
     elif price_weight == 0.0:
       bid = "Inf"
     else:
       # Calculate bid
-      bid = (1 + self.cost) / 2
+      bid = (1 + self._cost) / 2
     return bid
+  
+  def service_request(self, sr_capacity):
+    '''
+    Updates params as if serviced buyers service request
+    
+    Keyword arguments:
+    required_capacity -- Required capacity by the service
+    '''
+    # Update available capacity
+    self._available_capacity -= sr_capacity
+  
+  def finish_servicing_request(self, sr_capacity):
+    '''
+    Updates params when finishing servicing buyers service request
+    '''
+    # Update available capacity
+    self._available_capacity += sr_capacity
   
 
 class BidderTests(unittest.TestCase):

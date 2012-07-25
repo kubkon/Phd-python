@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 # encoding: utf-8
 """
 NumericalToolbox.py
@@ -7,13 +7,12 @@ Created by Jakub Konka on 2012-07-23.
 Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
 
-from __future__ import division
 import sys
 import os
 import numpy as np
 
 
-class NumericalToolbox:
+class NumericalToolbox(object):
   @classmethod
   def estimate_bid_hat_function(cls, w, reps, granularity=1000):
     # Calculate params
