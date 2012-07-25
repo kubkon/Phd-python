@@ -20,9 +20,9 @@ from SimulationEngine.SimulationEngine import *
 def main():
   ### Create scenario
   # Create Buyer
-  buyer = Buyer(0.5, Buyer.WEB_BROWSING)
+  buyer = Buyer(0.25, Buyer.WEB_BROWSING)
   # Create Bidders
-  bidders = [Bidder(100000), Bidder(50000)]
+  bidders = [Bidder(10000), Bidder(5000)]
   # Service requests mean interarrival rate (per second)
   interarrival_rate = 1
   # Service requests mean duration (in seconds)

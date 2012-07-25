@@ -35,6 +35,15 @@ class Bidder(object):
     self._total_capacity = total_capacity
     # Initialize available capacity
     self._available_capacity = total_capacity
+    # Initialize commitment
+    self._commitment = 0.8
+  
+  @property
+  def cost(self):
+    '''
+    Returns cost of the service
+    '''
+    return self._cost
   
   @property
   def reputation(self):
@@ -50,6 +59,19 @@ class Bidder(object):
     '''
     return self._available_capacity
   
+  def _update_reputation(self, success_report):
+    '''
+    Updates reputation according to commitment and success report
+    
+    Keyword arguments:
+    success_report -- Success report of current service request
+    '''
+    if success_report:
+      self._reputation = self._reputation - 0.01 if self._reputation >= 0.01 else 0.0
+    else:
+      param = self._commitment / (100 * (1 - self._commitment))
+      self._reputation = self._reputation + param if self._reputation + param <= 1.0 else 1.0
+  
   def submit_bid(self, price_weight, enemy_reputation):
     '''
     Returns bid of the bidder for the specified params
@@ -63,7 +85,7 @@ class Bidder(object):
       # Estimate equilibrium bidding strategy functions (bids-hat)
       bids_hat, costs_hat = NumericalToolbox.estimate_bid_hat_function(price_weight, [self._reputation, enemy_reputation])
       # Calculate bid
-      dist = map(lambda x: np.abs(x - ((1-price_weight)*self._reputation + self._cost*price_weight)), costs_hat)
+      dist = list(map(lambda x: np.abs(x - ((1-price_weight)*self._reputation + self._cost*price_weight)), costs_hat))
       bid = (bids_hat[dist.index(min(dist))] - (1-price_weight)*self._reputation) / price_weight
     elif price_weight == 0.0:
       bid = "Inf"
@@ -77,17 +99,26 @@ class Bidder(object):
     Updates params as if serviced buyers service request
     
     Keyword arguments:
-    required_capacity -- Required capacity by the service
+    sr_capacity -- Required capacity by the service
     '''
-    # Update available capacity
-    self._available_capacity -= sr_capacity
+    if self._available_capacity >= sr_capacity:
+      # Update available capacity
+      self._available_capacity -= sr_capacity
+      # Update reputation
+      self._update_reputation(True)
+    else:
+      # Update available capacity
+      self._available_capacity = 0
+      # Update reputation
+      self._update_reputation(False)
   
   def finish_servicing_request(self, sr_capacity):
     '''
     Updates params when finishing servicing buyers service request
     '''
     # Update available capacity
-    self._available_capacity += sr_capacity
+    cap_sum = self._available_capacity + sr_capacity
+    self._available_capacity = cap_sum if cap_sum < self._total_capacity else self._total_capacity
   
 
 class BidderTests(unittest.TestCase):

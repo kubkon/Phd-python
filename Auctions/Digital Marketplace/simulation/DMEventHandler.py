@@ -100,6 +100,8 @@ class DMEventHandler(EventHandler):
     '''
     Overriden
     '''
+    print("Bidder 1 cost: {}".format(self._bidders[0].cost))
+    print("Bidder 2 cost: {}".format(self._bidders[1].cost))
     self._schedule_sr_event(self._simulation_engine.simulation_time)
   
   def _handle_stop(self):
@@ -113,8 +115,8 @@ class DMEventHandler(EventHandler):
     Overriden
     '''
     print("{} : {}".format(event.time, event.identifier))
-    print("Bidder 1 capacity: {}".format(self._bidders[0].available_capacity))
-    print("Bidder 2 capacity: {}".format(self._bidders[1].available_capacity))
+    print("Bidder 1 capacity: {} reputation: {}".format(self._bidders[0].available_capacity, self._bidders[0].reputation))
+    print("Bidder 2 capacity: {} reputation: {}".format(self._bidders[1].available_capacity, self._bidders[1].reputation))
     if event.identifier == DMEventHandler.SR_EVENT:
       # Run auction
       self._run_auction(event.time)

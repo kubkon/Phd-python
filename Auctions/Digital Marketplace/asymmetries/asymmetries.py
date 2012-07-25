@@ -77,7 +77,7 @@ def estimate_bid_functions(w, reps, granularity=1000):
   if (v2[1] >= v1[1]):
     if (v1[1] <= 2*v2[0] - v2[1]):
       graph_vf1 = np.linspace(v1[0], v1[1], granularity)
-      bids1 = map(lambda x: v2[0], graph_vf1)
+      bids1 = list(map(lambda x: v2[0], graph_vf1))
       graph_vf2 = np.linspace(v2[0], v2[1], granularity)
       bids2 = graph_vf2
     else:
@@ -93,14 +93,14 @@ def estimate_bid_functions(w, reps, granularity=1000):
       # Sampling
       bids1 = np.linspace(b[0], b[1], granularity)
       bids2 = np.linspace(b[0], v2[1], granularity)
-      graph_vf1 = map(vf1, bids1)
-      graph_vf2 = map(vf2, bids2)
+      graph_vf1 = list(map(vf1, bids1))
+      graph_vf2 = list(map(vf2, bids2))
   else:
     if (v2[1] <= 2*v1[0] - v1[1]):
       graph_vf1 = np.linspace(v1[0], v1[1], granularity)
       bids1 = graph_vf1
       graph_vf2 = np.linspace(v2[0], v2[1], granularity)
-      bids2 = map(lambda x: v1[0], graph_vf2)
+      bids2 = list(map(lambda x: v1[0], graph_vf2))
     else:
       # Bid bounds
       b = [(4 * v1[0] * v2[0] - (v1[1] + v2[1])**2) / (4 * (v1[0] - v1[1] + v2[0] - v2[1])), (v1[1] + v2[1]) / 2]
@@ -114,8 +114,8 @@ def estimate_bid_functions(w, reps, granularity=1000):
       # Sampling
       bids1 = np.linspace(b[0], v1[1], granularity)
       bids2 = np.linspace(b[0], b[1], granularity)
-      graph_vf1 = map(vf1, bids1)
-      graph_vf2 = map(vf2, bids2)
+      graph_vf1 = list(map(vf1, bids1))
+      graph_vf2 = list(map(vf2, bids2))
   return bids1, graph_vf1, bids2, graph_vf2
 
 
@@ -127,23 +127,23 @@ def compare_with_approximation(ws, costs, reps):
     bids1, values1, bids2, values2 = estimate_bid_functions(w, reps)
     # Calculate Euclidean distance for each value in values1 and costs[0]
     # Get the index and use it to the get the value of the bid
-    v1_dist = map(lambda x: np.abs(x - ((1-w)*reps[0] + costs[0]*w)), values1)
+    v1_dist = list(map(lambda x: np.abs(x - ((1-w)*reps[0] + costs[0]*w)), values1))
     bid = (bids1[v1_dist.index(min(v1_dist))] - (1-w)*reps[0]) / w
     t_bids1 += [bid]
     c_bids1 += [w*bid + (1-w)*reps[0]]
     # Repeat for bidder 2
-    v2_dist = map(lambda x: np.abs(x - ((1-w)*reps[1] + costs[1]*w)), values2)
+    v2_dist = list(map(lambda x: np.abs(x - ((1-w)*reps[1] + costs[1]*w)), values2))
     bid = (bids2[v2_dist.index(min(v2_dist))] - (1-w)*reps[1]) / w
     t_bids2 += [bid]
     c_bids2 += [w*bid + (1-w)*reps[1]]
   # Use approximate (linear) solution
-  approx_t_bids1 = map(lambda x: max(costs[0], 0.5 + 0.5*costs[0] - (1-x)*(reps[0]-reps[1])/(3*x)), ws)
-  approx_c_bids1 = map(lambda x,y: x*y + (1-x)*reps[0], ws, approx_t_bids1)
-  approx_t_bids2 = map(lambda x: max(costs[1], 0.5 + 0.5*costs[1] - (1-x)*(reps[1]-reps[0])/(3*x)), ws)
-  approx_c_bids2 = map(lambda x,y: x*y + (1-x)*reps[1], ws, approx_t_bids2)
+  approx_t_bids1 = list(map(lambda x: max(costs[0], 0.5 + 0.5*costs[0] - (1-x)*(reps[0]-reps[1])/(3*x)), ws))
+  approx_c_bids1 = list(map(lambda x,y: x*y + (1-x)*reps[0], ws, approx_t_bids1))
+  approx_t_bids2 = list(map(lambda x: max(costs[1], 0.5 + 0.5*costs[1] - (1-x)*(reps[1]-reps[0])/(3*x)), ws))
+  approx_c_bids2 = list(map(lambda x,y: x*y + (1-x)*reps[1], ws, approx_t_bids2))
   # Calculate the error
-  error_t_bids1 = map(lambda x,y: x-y, t_bids1, approx_t_bids1)
-  error_c_bids1 = map(lambda x,y: x-y, c_bids1, approx_c_bids1)
+  error_t_bids1 = list(map(lambda x,y: x-y, t_bids1, approx_t_bids1))
+  error_c_bids1 = list(map(lambda x,y: x-y, c_bids1, approx_c_bids1))
   error_t_bids2 = map(lambda x,y: x-y, t_bids2, approx_t_bids2)
   error_c_bids2 = map(lambda x,y: x-y, c_bids2, approx_c_bids2)
   return error_t_bids1, error_c_bids1, error_t_bids2, error_c_bids2
@@ -263,13 +263,13 @@ def plot_wrt_w(costs, reps):
     bids1, values1, bids2, values2 = estimate_bid_functions(w, reps)
     # Calculate Euclidean distance for each value in values1 and costs[0]
     # Get the index and use it to the get the value of the bid
-    v1_dist = map(lambda x: np.abs(x - ((1-w)*reps[0] + costs[0]*w)), values1)
+    v1_dist = list(map(lambda x: np.abs(x - ((1-w)*reps[0] + costs[0]*w)), values1))
     t_bid1 = (bids1[v1_dist.index(min(v1_dist))] - (1-w)*reps[0]) / w
     t_bids1 += [t_bid1]
     c_bid1 = w*t_bid1 + (1-w)*reps[0]
     c_bids1 += [c_bid1]
     # Repeat for bidder 2
-    v2_dist = map(lambda x: np.abs(x - ((1-w)*reps[1] + costs[1]*w)), values2)
+    v2_dist = list(map(lambda x: np.abs(x - ((1-w)*reps[1] + costs[1]*w)), values2))
     t_bid2 = (bids2[v2_dist.index(min(v2_dist))] - (1-w)*reps[1]) / w
     t_bids2 += [t_bid2]
     c_bid2 = w*t_bid2 + (1-w)*reps[1]
@@ -462,7 +462,7 @@ def plot_expected_prices_v2(num):
         t_bid1 = (bids1[v1_dist.index(min(v1_dist))] - (1-w)*reps[0]) / w
         c_bid1 = w*t_bid1 + (1-w)*reps[0]
         # Repeat for bidder 2
-        v2_dist = map(lambda x: np.abs(x - ((1-w)*reps[1] + costs[1]*w)), values2)
+        v2_dist = list(map(lambda x: np.abs(x - ((1-w)*reps[1] + costs[1]*w)), values2))
         t_bid2 = (bids2[v2_dist.index(min(v2_dist))] - (1-w)*reps[1]) / w
         c_bid2 = w*t_bid2 + (1-w)*reps[1]
       else:
