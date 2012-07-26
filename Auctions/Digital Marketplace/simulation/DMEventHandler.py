@@ -11,6 +11,7 @@ import sys
 import os
 import unittest
 import numpy as np
+import matplotlib.pyplot as plt
 
 from Buyer import *
 
@@ -112,6 +113,12 @@ class DMEventHandler(EventHandler):
     print("Bidder 2 cost: {}".format(self._bidders[1].cost))
     # Print prices paid by the buyer
     print("Prices: {}".format(self._buyer.prices))
+    plt.figure()
+    plt.plot(range(1, len(self._buyer.prices)+1), self._buyer.prices)
+    plt.grid()
+    plt.xlabel("Service requests")
+    plt.ylabel("Prices")
+    plt.savefig("prices.pdf")
   
   def _handle_event(self, event):
     '''
