@@ -24,8 +24,7 @@ class DMEventHandler(EventHandler):
   '''
   # IDs of handled events
   SR_EVENT = "ServiceRequest"
-  ST_EVENT_1 = "STBidder1"
-  ST_EVENT_2 = "STBidder2"
+  ST_EVENTS = []
   
   def __init__(self, simulation_engine):
     '''
@@ -67,6 +66,8 @@ class DMEventHandler(EventHandler):
     Adds Bidder instance
     '''
     self._bidders += [bidder]
+    # Create termination event for this bidder
+    DMEventHandler.ST_EVENTS += ["Bidder{}".format(len(self._bidders))]
   
   @property
   def interarrival_rate(self):
@@ -100,15 +101,17 @@ class DMEventHandler(EventHandler):
     '''
     Overriden
     '''
-    print("Bidder 1 cost: {}".format(self._bidders[0].cost))
-    print("Bidder 2 cost: {}".format(self._bidders[1].cost))
     self._schedule_sr_event(self._simulation_engine.simulation_time)
   
   def _handle_stop(self):
     '''
     Overriden
     '''
-    pass
+    # Print costs of bidders
+    print("Bidder 1 cost: {}".format(self._bidders[0].cost))
+    print("Bidder 2 cost: {}".format(self._bidders[1].cost))
+    # Print prices paid by the buyer
+    print("Prices: {}".format(self._buyer.prices))
   
   def _handle_event(self, event):
     '''
@@ -122,12 +125,10 @@ class DMEventHandler(EventHandler):
       self._run_auction(event.time)
       # Schedule next service request event
       self._schedule_sr_event(event.time)
-    elif event.identifier == DMEventHandler.ST_EVENT_1:
-      # Bidder 1 finished handling request
-      self._bidders[0].finish_servicing_request(Buyer.CAPACITY[self._buyer.service])
-    elif event.identifier == DMEventHandler.ST_EVENT_2:
-      # Bidder 2 finished handling request
-      self._bidders[1].finish_servicing_request(Buyer.CAPACITY[self._buyer.service])
+    elif event.identifier in DMEventHandler.ST_EVENTS:
+      # A bidder finished handling request
+      bidder = DMEventHandler.ST_EVENTS.index(event.identifier)
+      self._bidders[bidder].finish_servicing_request(Buyer.CAPACITY[self._buyer.service])
     else:
       # End of simulation event
       pass
@@ -178,8 +179,7 @@ class DMEventHandler(EventHandler):
     self._buyer.add_price(bids[winner])
     self._bidders[winner].service_request(Buyer.CAPACITY[self._buyer.service])
     # Schedule termination event
-    event_type = DMEventHandler.ST_EVENT_1 if winner == 0 else DMEventHandler.ST_EVENT_2
-    self._schedule_st_event(event_type, base_time)
+    self._schedule_st_event(DMEventHandler.ST_EVENTS[winner], base_time)
   
 
 class DMEventHandlerTests(unittest.TestCase):

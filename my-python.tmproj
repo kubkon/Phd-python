@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>Auctions/Digital Marketplace/simulation/tatonnement.py</string>
+	<string>Auctions/Digital Marketplace/simulation/DMEventHandler.py</string>
 	<key>documents</key>
 	<array>
 		<dict>
@@ -18,39 +18,9 @@
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
-	<integer>211</integer>
+	<integer>186</integer>
 	<key>metaData</key>
 	<dict>
-		<key>Auctions/Digital Marketplace/asymmetries/asymmetries.py</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>73</integer>
-				<key>line</key>
-				<integer>461</integer>
-			</dict>
-			<key>columnSelection</key>
-			<false/>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>337</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>17</integer>
-				<key>line</key>
-				<integer>461</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>73</integer>
-				<key>line</key>
-				<integer>461</integer>
-			</dict>
-		</dict>
 		<key>Auctions/Digital Marketplace/bounds/calc_bounds.py</key>
 		<dict>
 			<key>caret</key>
@@ -79,19 +49,105 @@
 			<key>firstVisibleLine</key>
 			<integer>22</integer>
 		</dict>
+		<key>Auctions/Digital Marketplace/simulation/Bidder.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>2</integer>
+				<key>line</key>
+				<integer>46</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>15</integer>
+		</dict>
+		<key>Auctions/Digital Marketplace/simulation/Buyer.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>21</integer>
+				<key>line</key>
+				<integer>0</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>17</integer>
+		</dict>
+		<key>Auctions/Digital Marketplace/simulation/DMEventHandler.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>50</integer>
+				<key>line</key>
+				<integer>102</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>87</integer>
+		</dict>
+		<key>Auctions/Digital Marketplace/simulation/NumericalToolbox.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>21</integer>
+				<key>line</key>
+				<integer>0</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
+		<key>Auctions/Digital Marketplace/simulation/main.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>15</integer>
+				<key>line</key>
+				<integer>44</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
 		<key>Auctions/Digital Marketplace/simulation/tatonnement.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>35</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>152</integer>
+				<integer>86</integer>
 			</dict>
+			<key>columnSelection</key>
+			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>134</integer>
+			<integer>55</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>65</integer>
+				<key>line</key>
+				<integer>87</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>86</integer>
+			</dict>
 		</dict>
 		<key>Auctions/Digital Marketplace/test/my_test.py</key>
 		<dict>
@@ -210,8 +266,11 @@
 	</dict>
 	<key>openDocuments</key>
 	<array>
-		<string>Auctions/Digital Marketplace/asymmetries/asymmetries.py</string>
-		<string>Auctions/Digital Marketplace/simulation/tatonnement.py</string>
+		<string>Auctions/Digital Marketplace/simulation/main.py</string>
+		<string>Auctions/Digital Marketplace/simulation/DMEventHandler.py</string>
+		<string>Auctions/Digital Marketplace/simulation/Buyer.py</string>
+		<string>Auctions/Digital Marketplace/simulation/Bidder.py</string>
+		<string>Auctions/Digital Marketplace/simulation/NumericalToolbox.py</string>
 	</array>
 	<key>shellVariables</key>
 	<array>
@@ -227,6 +286,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{390, 0}, {976, 746}}</string>
+	<string>{{277, 0}, {1003, 1002}}</string>
 </dict>
 </plist>
