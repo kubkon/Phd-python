@@ -54,7 +54,7 @@ class DMEventHandler(EventHandler):
     '''
     self._buyers += [buyer]
     # Create service request event for this bidder
-    DMEventHandler.SR_EVENTS += ["Buyer{}".format(len(self._buyers))]
+    DMEventHandler.SR_EVENTS += [buyer]
   
   @property
   def bidders(self):
@@ -69,7 +69,7 @@ class DMEventHandler(EventHandler):
     '''
     self._bidders += [bidder]
     # Create termination event for this bidder
-    DMEventHandler.ST_EVENTS += ["Bidder{}".format(len(self._bidders))]
+    DMEventHandler.ST_EVENTS += [bidder]
   
   @property
   def interarrival_rate(self):
@@ -110,16 +110,16 @@ class DMEventHandler(EventHandler):
     Overriden
     '''
     # Print costs of bidders
-    for i in range(len(self._bidders)):
-      print("{} costs: {}".format(self._bidders[i], self._bidders[i].costs))
+    for b in self._bidders:
+      print("{} costs: {}".format(b, b.costs))
   
   def _handle_event(self, event):
     '''
     Overriden
     '''
     print("{} : {}".format(event.time, event.identifier))
-    print("Bidder 1 capacity: {} reputation: {}".format(self._bidders[0].available_capacity, self._bidders[0].reputation))
-    print("Bidder 2 capacity: {} reputation: {}".format(self._bidders[1].available_capacity, self._bidders[1].reputation))
+    for b in self._bidders:
+      print("{} capacity: {} reputation: {}".format(b.available_capacity, b.reputation))
     if event.identifier in DMEventHandler.SR_EVENTS:
       # Run auction
       self._run_auction(event)
