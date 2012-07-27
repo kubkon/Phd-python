@@ -23,10 +23,6 @@ class DMEventHandler(EventHandler):
   '''
   Digital Marketplace specific event handler
   '''
-  # IDs of handled events
-  SR_EVENTS = []
-  ST_EVENTS = []
-  
   def __init__(self, simulation_engine):
     '''
     Constructs DMEventHandler instance
@@ -53,8 +49,6 @@ class DMEventHandler(EventHandler):
     Adds Buyer instance
     '''
     self._buyers += [buyer]
-    # Create service request event for this bidder
-    DMEventHandler.SR_EVENTS += [buyer]
   
   @property
   def bidders(self):
@@ -68,8 +62,6 @@ class DMEventHandler(EventHandler):
     Adds Bidder instance
     '''
     self._bidders += [bidder]
-    # Create termination event for this bidder
-    DMEventHandler.ST_EVENTS += [bidder]
   
   @property
   def interarrival_rate(self):
@@ -119,16 +111,17 @@ class DMEventHandler(EventHandler):
     '''
     print("{} : {}".format(event.time, event.identifier))
     for b in self._bidders:
-      print("{} capacity: {} reputation: {}".format(b.available_capacity, b.reputation))
-    if event.identifier in DMEventHandler.SR_EVENTS:
+      print("{} capacity: {} reputation: {}".format(b, b.available_capacity, b.reputation))
+    if event.identifier in self._buyers:
       # Run auction
       self._run_auction(event)
       # Schedule next service request event
       self._schedule_sr_event(event.time)
-    elif event.identifier in DMEventHandler.ST_EVENTS:
+    elif event.identifier in self._bidders:
       # A bidder finished handling request
-      bidder = DMEventHandler.ST_EVENTS.index(event.identifier)
-      self._bidders[bidder].finish_servicing_request(Buyer.CAPACITY[self._buyers[0].service])
+      bidder = event.identifier
+      buyer = event.kwargs.get('buyer', None)
+      bidder.finish_servicing_request(Buyer.CAPACITY[buyer.service])
     else:
       # End of simulation event
       pass
@@ -142,18 +135,18 @@ class DMEventHandler(EventHandler):
     # Calculate interarrival time
     delta_time = np.random.exponential(1 / self._interarrival_rate)
     # Create next service request event
-    event = Event(DMEventHandler.SR_EVENTS[buyer], base_time + delta_time)
+    event = Event(self._buyers[buyer], base_time + delta_time)
     # Schedule the event
     self._simulation_engine.schedule(event)
   
-  def _schedule_st_event(self, event_type, base_time):
+  def _schedule_st_event(self, event_type, base_time, buyer):
     '''
     Schedules next service request termination event
     '''
     # Calculate termination time
     delta_time = np.random.exponential(self._duration)
     # Create next service termination event
-    event = Event(event_type, base_time + delta_time)
+    event = Event(event_type, base_time + delta_time, buyer=buyer)
     # Schedule the event
     self._simulation_engine.schedule(event)
   
@@ -162,11 +155,11 @@ class DMEventHandler(EventHandler):
     Runs DM auction
     '''
     # Get price weight of current bidder type
-    buyer = DMEventHandler.SR_EVENTS.index(event.identifier)
-    w = self._buyers[buyer].price_weight
+    buyer = event.identifier
+    w = buyer.price_weight
     # Get bids from bidders
-    bids = [self._bidders[0].submit_bid(self._buyers[buyer].service, w, self._bidders[1].reputation)]
-    bids += [self._bidders[1].submit_bid(self._buyers[buyer].service, w, self._bidders[0].reputation)]
+    bids = [self._bidders[0].submit_bid(buyer.service, w, self._bidders[1].reputation)]
+    bids += [self._bidders[1].submit_bid(buyer.service, w, self._bidders[0].reputation)]
     # Elect the winner
     compound_bids = [w*bids[i] + (1-w)*self._bidders[i].reputation for i in range(2)]
     winner = 0
@@ -180,10 +173,10 @@ class DMEventHandler(EventHandler):
       # Tie
       winner = np.random.randint(2)
     # Update system state
-    self._buyers[buyer].add_price(bids[winner])
-    self._bidders[winner].service_request(Buyer.CAPACITY[self._buyers[buyer].service])
+    buyer.add_price(bids[winner])
+    self._bidders[winner].service_request(Buyer.CAPACITY[buyer.service])
     # Schedule termination event
-    self._schedule_st_event(DMEventHandler.ST_EVENTS[winner], event.time)
+    self._schedule_st_event(self._bidders[winner], event.time, buyer)
   
 
 class DMEventHandlerTests(unittest.TestCase):
