@@ -19,8 +19,8 @@ from SimulationEngine.SimulationEngine import *
 
 def main():
   ### Create scenario
-  # Create Buyer
-  buyer = Buyer(0.5, Buyer.WEB_BROWSING)
+  # Create Buyers
+  buyers = [Buyer(0.5, Buyer.WEB_BROWSING), Buyer(0.25, Buyer.WEB_BROWSING)]
   # Create Bidders
   bidders = [Bidder(10000), Bidder(5000)]
   # Service requests mean interarrival rate (per second)
@@ -33,8 +33,8 @@ def main():
   sim = SimulationEngine()
   # Create simulation specific event handler
   event_handler = DMEventHandler(sim)
-  # Connect buyer and bidders
-  event_handler.buyer = buyer
+  # Add buyers and bidders to simulation engine
+  for buyer in buyers: event_handler.add_buyer(buyer)
   for bidder in bidders: event_handler.add_bidder(bidder)
   # Set params
   event_handler.interarrival_rate = interarrival_rate

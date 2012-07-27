@@ -73,12 +73,12 @@ class BuyerTests(unittest.TestCase):
     self.buyer = Buyer(0.5, Buyer.WEB_BROWSING)
   
   def test_properties(self):
-    self.assertEquals(self.buyer.price_weight, 0.5)
-    self.assertEquals(self.buyer.service, Buyer.WEB_BROWSING)
+    self.assertEqual(self.buyer.price_weight, 0.5)
+    self.assertEqual(self.buyer.service, Buyer.WEB_BROWSING)
   
   def test_prices(self):
     [self.buyer.add_price(i) for i in range(5)]
-    self.assertEquals(self.buyer.prices, [0,1,2,3,4])
+    self.assertEqual(self.buyer.prices, [0,1,2,3,4])
 
 
 if __name__ == '__main__':

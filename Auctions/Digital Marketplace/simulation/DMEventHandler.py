@@ -24,7 +24,7 @@ class DMEventHandler(EventHandler):
   Digital Marketplace specific event handler
   '''
   # IDs of handled events
-  SR_EVENT = "ServiceRequest"
+  SR_EVENTS = []
   ST_EVENTS = []
   
   def __init__(self, simulation_engine):
@@ -32,8 +32,8 @@ class DMEventHandler(EventHandler):
     Constructs DMEventHandler instance
     '''
     super(DMEventHandler, self).__init__(simulation_engine)
-    # Initialize buyer
-    self._buyer = None
+    # Initialize buyers
+    self._buyers = []
     # Initialize list of bidders
     self._bidders = []
     # Initialize service requests mean interarrival rate
@@ -42,18 +42,19 @@ class DMEventHandler(EventHandler):
     self._duration = 0
   
   @property
-  def buyer(self):
+  def buyers(self):
     '''
-    Returns Buyer instance used in the simulation
+    Returns list of buyers
     '''
-    return self._buyer
+    return self._buyers
   
-  @buyer.setter
-  def buyer(self, buyer):
+  def add_buyer(self, buyer):
     '''
-    Sets Buyer instance used in the simulation
+    Adds Buyer instance
     '''
-    self._buyer = buyer
+    self._buyers += [buyer]
+    # Create service request event for this bidder
+    DMEventHandler.SR_EVENTS += ["Buyer{}".format(len(self._buyers))]
   
   @property
   def bidders(self):
@@ -109,16 +110,8 @@ class DMEventHandler(EventHandler):
     Overriden
     '''
     # Print costs of bidders
-    print("Bidder 1 cost: {}".format(self._bidders[0].cost))
-    print("Bidder 2 cost: {}".format(self._bidders[1].cost))
-    # Print prices paid by the buyer
-    print("Prices: {}".format(self._buyer.prices))
-    plt.figure()
-    plt.plot(range(1, len(self._buyer.prices)+1), self._buyer.prices)
-    plt.grid()
-    plt.xlabel("Service requests")
-    plt.ylabel("Prices")
-    plt.savefig("prices.pdf")
+    for i in range(len(self._bidders)):
+      print("{} costs: {}".format(self._bidders[i], self._bidders[i].costs))
   
   def _handle_event(self, event):
     '''
@@ -127,15 +120,15 @@ class DMEventHandler(EventHandler):
     print("{} : {}".format(event.time, event.identifier))
     print("Bidder 1 capacity: {} reputation: {}".format(self._bidders[0].available_capacity, self._bidders[0].reputation))
     print("Bidder 2 capacity: {} reputation: {}".format(self._bidders[1].available_capacity, self._bidders[1].reputation))
-    if event.identifier == DMEventHandler.SR_EVENT:
+    if event.identifier in DMEventHandler.SR_EVENTS:
       # Run auction
-      self._run_auction(event.time)
+      self._run_auction(event)
       # Schedule next service request event
       self._schedule_sr_event(event.time)
     elif event.identifier in DMEventHandler.ST_EVENTS:
       # A bidder finished handling request
       bidder = DMEventHandler.ST_EVENTS.index(event.identifier)
-      self._bidders[bidder].finish_servicing_request(Buyer.CAPACITY[self._buyer.service])
+      self._bidders[bidder].finish_servicing_request(Buyer.CAPACITY[self._buyers[0].service])
     else:
       # End of simulation event
       pass
@@ -144,10 +137,12 @@ class DMEventHandler(EventHandler):
     '''
     Schedules next service request event
     '''
+    # Randomize through buyer types
+    buyer = np.random.randint(len(self._buyers))
     # Calculate interarrival time
     delta_time = np.random.exponential(1 / self._interarrival_rate)
     # Create next service request event
-    event = Event(DMEventHandler.SR_EVENT, base_time + delta_time)
+    event = Event(DMEventHandler.SR_EVENTS[buyer], base_time + delta_time)
     # Schedule the event
     self._simulation_engine.schedule(event)
   
@@ -162,14 +157,16 @@ class DMEventHandler(EventHandler):
     # Schedule the event
     self._simulation_engine.schedule(event)
   
-  def _run_auction(self, base_time):
+  def _run_auction(self, event):
     '''
     Runs DM auction
     '''
-    w = self._buyer.price_weight
+    # Get price weight of current bidder type
+    buyer = DMEventHandler.SR_EVENTS.index(event.identifier)
+    w = self._buyers[buyer].price_weight
     # Get bids from bidders
-    bids = [self._bidders[0].submit_bid(w, self._bidders[1].reputation)]
-    bids += [self._bidders[1].submit_bid(w, self._bidders[0].reputation)]
+    bids = [self._bidders[0].submit_bid(self._buyers[buyer].service, w, self._bidders[1].reputation)]
+    bids += [self._bidders[1].submit_bid(self._buyers[buyer].service, w, self._bidders[0].reputation)]
     # Elect the winner
     compound_bids = [w*bids[i] + (1-w)*self._bidders[i].reputation for i in range(2)]
     winner = 0
@@ -183,10 +180,10 @@ class DMEventHandler(EventHandler):
       # Tie
       winner = np.random.randint(2)
     # Update system state
-    self._buyer.add_price(bids[winner])
-    self._bidders[winner].service_request(Buyer.CAPACITY[self._buyer.service])
+    self._buyers[buyer].add_price(bids[winner])
+    self._bidders[winner].service_request(Buyer.CAPACITY[self._buyers[buyer].service])
     # Schedule termination event
-    self._schedule_st_event(DMEventHandler.ST_EVENTS[winner], base_time)
+    self._schedule_st_event(DMEventHandler.ST_EVENTS[winner], event.time)
   
 
 class DMEventHandlerTests(unittest.TestCase):
