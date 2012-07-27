@@ -104,6 +104,14 @@ class DMEventHandler(EventHandler):
     # Print costs of bidders
     for b in self._bidders:
       print("{} costs: {}".format(b, b.costs))
+    # Plot prices paid by each buyer type
+    for b in self._buyers:
+      plt.figure()
+      plt.plot(range(1, len(b.prices)+1), b.prices)
+      plt.xlabel("Service request")
+      plt.ylabel("Price")
+      plt.grid()
+      plt.savefig("{}_prices.pdf".format(b))
   
   def _handle_event(self, event):
     '''
