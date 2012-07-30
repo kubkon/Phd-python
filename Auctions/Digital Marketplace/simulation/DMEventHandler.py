@@ -101,18 +101,16 @@ class DMEventHandler(EventHandler):
     '''
     Overriden
     '''
-    # Print costs of bidders
-    for b in self._bidders:
-      print("{} costs: {}".format(b, b.costs))
+    # Save params to file
+    self._save_to_file()
     # Plot prices paid by each buyer type
-    buyer_dict = {buyer: "Buyer{}".format(name) for buyer, name in zip(self._buyers, range(2))}
     for b in self._buyers:
       plt.figure()
       plt.plot(range(1, len(b.prices)+1), b.prices)
       plt.xlabel("Service request")
       plt.ylabel("Price")
       plt.grid()
-      plt.savefig("{}_prices.pdf".format(buyer_dict[b]))
+      plt.savefig("{}_prices.pdf".format(b))
   
   def _handle_event(self, event):
     '''
@@ -186,6 +184,23 @@ class DMEventHandler(EventHandler):
     self._bidders[winner].service_request(Buyer.CAPACITY[buyer.service])
     # Schedule termination event
     self._schedule_st_event(self._bidders[winner], event.time, buyer)
+  
+  def _save_to_file(self):
+    '''
+    Saves parameters used in the simulation to a file
+    '''
+    # Prepare stream
+    bar = "-"*50
+    stream = "Bidders:\n"
+    for bidder in self._bidders:
+      stream += "\n{}\ncosts: {}\ncommitment: {}\n".format(bidder, bidder.costs, bidder.commitment)
+    stream += bar
+    stream += "\nBuyers:\n"
+    for buyer in self._buyers:
+      stream += "\n{}\nprice_weight: {}\nservice: {}\n".format(buyer, buyer.price_weight, buyer.service)
+    # Write stream to a file
+    with open('params.log', mode='w', encoding='utf-8') as a_file:
+      a_file.write(stream)
   
 
 class DMEventHandlerTests(unittest.TestCase):

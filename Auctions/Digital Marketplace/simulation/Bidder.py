@@ -37,7 +37,7 @@ class Bidder(object):
     # Initialize available capacity
     self._available_capacity = total_capacity
     # Initialize commitment
-    self._commitment = 0.8
+    self._commitment = 0.5
   
   @property
   def costs(self):
@@ -59,6 +59,20 @@ class Bidder(object):
     Returns available capacity
     '''
     return self._available_capacity
+  
+  @property
+  def commitment(self):
+    '''
+    Returns commitment (ranging from 0.0 to 1.0)
+    '''
+    return self._commitment
+  
+  @commitment.setter
+  def commitment(self, commitment):
+    '''
+    Sets commitment (can be from 0.0 to 1.0)
+    '''
+    self._commitment = commitment
   
   def _generate_cost(self, service_type):
     '''

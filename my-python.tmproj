@@ -54,14 +54,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>133</integer>
+				<integer>26</integer>
 				<key>line</key>
-				<integer>104</integer>
+				<integer>39</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>107</integer>
+			<integer>15</integer>
 		</dict>
 		<key>Auctions/Digital Marketplace/simulation/Buyer.py</key>
 		<dict>
@@ -75,49 +75,35 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>43</integer>
+			<integer>27</integer>
 		</dict>
 		<key>Auctions/Digital Marketplace/simulation/DMEventHandler.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>39</integer>
+				<integer>91</integer>
 				<key>line</key>
-				<integer>109</integer>
+				<integer>122</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>81</integer>
-		</dict>
-		<key>Auctions/Digital Marketplace/simulation/NumericalToolbox.py</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>21</integer>
-				<key>line</key>
-				<integer>0</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>88</integer>
 		</dict>
 		<key>Auctions/Digital Marketplace/simulation/main.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>67</integer>
+				<integer>17</integer>
 				<key>line</key>
-				<integer>22</integer>
+				<integer>28</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>7</integer>
 		</dict>
 		<key>Auctions/Digital Marketplace/simulation/tatonnement.py</key>
 		<dict>
@@ -285,6 +271,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{277, 0}, {1003, 1002}}</string>
+	<string>{{259, 0}, {1107, 746}}</string>
 </dict>
 </plist>
