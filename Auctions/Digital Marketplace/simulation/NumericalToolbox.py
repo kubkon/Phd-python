@@ -22,7 +22,7 @@ class NumericalToolbox(object):
     if (v2[1] >= v1[1]):
       if (v1[1] <= 2*v2[0] - v2[1]):
         graph_vf = np.linspace(v1[0], v1[1], granularity)
-        bids = map(lambda x: v2[0], graph_vf)
+        bids = list(map(lambda x: v2[0], graph_vf))
       else:
         # Bid bounds
         b = [(4 * v1[0] * v2[0] - (v1[1] + v2[1])**2) / (4 * (v1[0] - v1[1] + v2[0] - v2[1])), (v1[1] + v2[1]) / 2]
@@ -33,7 +33,7 @@ class NumericalToolbox(object):
         vf = lambda x: v1[1] + (v2[1]-v1[1])**2 / (c1*(v2[1]+v1[1]-2*x)*np.exp((v2[1]-v1[1])/(v2[1]+v1[1]-2*x)) + 4*(v2[1]-x))
         # Sampling
         bids = np.linspace(b[0], b[1], granularity)
-        graph_vf = map(vf, bids)
+        graph_vf = list(map(vf, bids))
     else:
       if (v2[1] <= 2*v1[0] - v1[1]):
         graph_vf = np.linspace(v1[0], v1[1], granularity)
@@ -49,5 +49,5 @@ class NumericalToolbox(object):
               if x <= b[1] else x
         # Sampling
         bids = np.linspace(b[0], v1[1], granularity)
-        graph_vf = map(vf, bids)
+        graph_vf = list(map(vf, bids))
     return bids, graph_vf
