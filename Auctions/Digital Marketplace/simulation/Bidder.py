@@ -21,15 +21,16 @@ class Bidder(object):
   Represents bidder in the Digital Marketplace; hence
   a network operator
   '''
-  def __init__(self, total_capacity):
+  def __init__(self, total_capacity, costs=None):
     '''
     Constructs Bidder instance
     
     Keyword arguments:
     total_capacity -- Total capacity available
+    costs -- (Optional) costs per service type
     '''
     # Initialize costs dict (cost per service type)
-    self._costs = {}
+    self._costs = {} if costs is None else costs
     # Initialize reputation to default value
     self._reputation = 0.5
     # Assign total capacity available to the bidder
