@@ -22,10 +22,10 @@ def main():
   # Create Buyers
   buyers = [Buyer(0.25, Buyer.WEB_BROWSING), Buyer(0.75, Buyer.WEB_BROWSING)]
   # Create Bidders
-  bidders = [Bidder(10000, {Buyer.WEB_BROWSING: 0.75}), Bidder(5000, {Buyer.WEB_BROWSING: 0.25})]
+  bidders = [Bidder(10000, {Buyer.WEB_BROWSING: 0.5}), Bidder(5000, {Buyer.WEB_BROWSING: 0.51})]
   # Set commitment for both bidders
   for b in bidders:
-    b.commitment = 0.8
+    b.commitment = 0.5
   # Service requests mean interarrival rate (per second)
   interarrival_rate = 1
   # Service requests mean duration (in seconds)

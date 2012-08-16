@@ -101,16 +101,8 @@ class DMEventHandler(EventHandler):
     '''
     Overriden
     '''
-    # Save params to file
-    self._save_to_file()
-    # Plot prices paid by each buyer type
-    for b in self._buyers:
-      plt.figure()
-      plt.plot(range(1, len(b.prices)+1), b.prices)
-      plt.xlabel("Service request")
-      plt.ylabel("Price")
-      plt.grid()
-      plt.savefig("{}_prices.pdf".format(b))
+    # Save results of the simulation
+    self._save_results()
   
   def _handle_event(self, event):
     '''
@@ -185,10 +177,11 @@ class DMEventHandler(EventHandler):
     # Schedule termination event
     self._schedule_st_event(self._bidders[winner], event.time, buyer)
   
-  def _save_to_file(self):
+  def _save_results(self):
     '''
-    Saves parameters used in the simulation to a file
+    Saves results of the simulation
     '''
+    ### Params
     # Prepare stream
     bar = "-"*50
     stream = "Bidders:\n"
@@ -198,9 +191,22 @@ class DMEventHandler(EventHandler):
     stream += "\nBuyers:\n"
     for buyer in self._buyers:
       stream += "\n{}\nprice_weight: {}\nservice: {}\n".format(buyer, buyer.price_weight, buyer.service)
+    # Create output directory if doesn't exist already
+    dir_name = "out"
+    if not os.path.exists(dir_name):
+      os.makedirs(dir_name)
     # Write stream to a file
-    with open('params.log', mode='w', encoding='utf-8') as a_file:
+    with open(dir_name + '/params.log', mode='w', encoding='utf-8') as a_file:
       a_file.write(stream)
+    ### Figures
+    # Plot prices paid by each buyer type
+    for b in self._buyers:
+      plt.figure()
+      plt.plot(range(1, len(b.prices)+1), b.prices)
+      plt.xlabel("Service request")
+      plt.ylabel("Price")
+      plt.grid()
+      plt.savefig(dir_name + "/{}_prices.pdf".format(b))
   
 
 class DMEventHandlerTests(unittest.TestCase):
