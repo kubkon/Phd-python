@@ -36,8 +36,10 @@ class DMEventHandler(EventHandler):
     self._interarrival_rate = 0
     # Initialize service requests mean duration
     self._duration = 0
-    # Initialize winners dict (per service type)
+    # Initialize winners dict (key: buyer type)
     self._winners = {}
+    # Initialize reputation history dict (key: buyer type)
+    self._reputations = {}
   
   @property
   def buyers(self):
@@ -173,10 +175,12 @@ class DMEventHandler(EventHandler):
     else:
       # Tie
       winner = np.random.randint(2)
+    # Store global params (winners and reputations)
+    self._winners[buyer] = self._winners[buyer] + [winner] if buyer in self._winners else [winner]
+    self._reputations[buyer] = self._reputations[buyer] + [(self._bidders[0].reputation, self._bidders[1].reputation)] if buyer in self._reputations else [(self._bidders[0].reputation, self._bidders[1].reputation)]
     # Update system state
     buyer.add_price(bids[winner])
     self._bidders[winner].service_request(Buyer.CAPACITY[buyer.service])
-    self._winners[buyer] = self._winners[buyer] + [winner] if buyer in self._winners else [winner]
     # Schedule termination event
     self._schedule_st_event(self._bidders[winner], event.time, buyer)
   
@@ -219,6 +223,18 @@ class DMEventHandler(EventHandler):
       plt.ylabel("Winner (bidder)")
       plt.grid()
       plt.savefig(dir_name + "/{}_winners.pdf".format(b))
+    # Plot reputation history per buyer type
+    for b in self._buyers:
+      plt.figure()
+      reps_0 = [tup[0] for tup in self._reputations[b]]
+      reps_1 = [tup[1] for tup in self._reputations[b]]
+      plt.plot(range(1, len(self._reputations[b])+1), reps_0)
+      plt.plot(range(1, len(self._reputations[b])+1), reps_1)
+      plt.xlabel("Service request")
+      plt.ylabel("Reputation")
+      plt.legend(["Bidder 0", "Bidder 1"])
+      plt.grid()
+      plt.savefig(dir_name + "/{}_reputations.pdf".format(b))
   
 
 class DMEventHandlerTests(unittest.TestCase):
