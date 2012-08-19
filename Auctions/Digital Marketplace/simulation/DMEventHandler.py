@@ -36,6 +36,8 @@ class DMEventHandler(EventHandler):
     self._interarrival_rate = 0
     # Initialize service requests mean duration
     self._duration = 0
+    # Initialize winners dict (per service type)
+    self._winners = {}
   
   @property
   def buyers(self):
@@ -174,6 +176,7 @@ class DMEventHandler(EventHandler):
     # Update system state
     buyer.add_price(bids[winner])
     self._bidders[winner].service_request(Buyer.CAPACITY[buyer.service])
+    self._winners[buyer] = self._winners[buyer] + [winner] if buyer in self._winners else [winner]
     # Schedule termination event
     self._schedule_st_event(self._bidders[winner], event.time, buyer)
   
@@ -207,6 +210,15 @@ class DMEventHandler(EventHandler):
       plt.ylabel("Price")
       plt.grid()
       plt.savefig(dir_name + "/{}_prices.pdf".format(b))
+    # Plot winners per buyer type
+    for b in self._buyers:
+      plt.figure()
+      plt.plot(range(1, len(self._winners[b])+1), self._winners[b], '*')
+      plt.ylim([-0.5, 1.5])
+      plt.xlabel("Service request")
+      plt.ylabel("Winner (bidder)")
+      plt.grid()
+      plt.savefig(dir_name + "/{}_winners.pdf".format(b))
   
 
 class DMEventHandlerTests(unittest.TestCase):
