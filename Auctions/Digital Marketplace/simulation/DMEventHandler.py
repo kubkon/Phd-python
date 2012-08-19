@@ -27,7 +27,7 @@ class DMEventHandler(EventHandler):
     '''
     Constructs DMEventHandler instance
     '''
-    super(DMEventHandler, self).__init__(simulation_engine)
+    super().__init__(simulation_engine)
     # Initialize buyers
     self._buyers = []
     # Initialize list of bidders
