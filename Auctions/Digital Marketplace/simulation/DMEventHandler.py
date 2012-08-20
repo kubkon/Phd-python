@@ -28,6 +28,7 @@ class DMEventHandler(EventHandler):
     Constructs DMEventHandler instance
     '''
     super().__init__(simulation_engine)
+    ### Simulation building blocks and params
     # Initialize buyers
     self._buyers = []
     # Initialize list of bidders
@@ -36,10 +37,15 @@ class DMEventHandler(EventHandler):
     self._interarrival_rate = 0
     # Initialize service requests mean duration
     self._duration = 0
-    # Initialize winners dict (key: buyer type)
-    self._winners = {}
-    # Initialize reputation history dict (key: buyer type)
-    self._reputations = {}
+    ### Output data
+    # Initialize service request history list
+    self._sr_history = []
+    # Initialize prices paid list
+    self._prices = []
+    # Initialize winners list
+    self._winners = []
+    # Initialize reputation history dict (key: bidder)
+    self._reputation_history = {}
   
   @property
   def buyers(self):
@@ -112,9 +118,6 @@ class DMEventHandler(EventHandler):
     '''
     Overriden
     '''
-    print("{} : {}".format(event.time, event.identifier))
-    for b in self._bidders:
-      print("{} capacity: {} reputation: {}".format(b, b.available_capacity, b.reputation))
     if event.identifier in self._buyers:
       # Run auction
       self._run_auction(event)
@@ -175,9 +178,12 @@ class DMEventHandler(EventHandler):
     else:
       # Tie
       winner = np.random.randint(2)
-    # Store global params (winners and reputations)
-    self._winners[buyer] = self._winners[buyer] + [winner] if buyer in self._winners else [winner]
-    self._reputations[buyer] = self._reputations[buyer] + [(self._bidders[0].reputation, self._bidders[1].reputation)] if buyer in self._reputations else [(self._bidders[0].reputation, self._bidders[1].reputation)]
+    # Mine data: prices, winners, reputation history and service request history
+    self._prices = self._prices + [bids[winner]] if self._prices else [bids[winner]]
+    self._winners = self._winners + [winner] if self._winners else [winner]
+    for b in self._bidders:
+      self._reputation_history[b] = self._reputation_history[b] + [b.reputation] if b in self._reputation_history else [b.reputation]
+    self._sr_history += [buyer] if self._sr_history else [buyer]
     # Update system state
     buyer.add_price(bids[winner])
     self._bidders[winner].service_request(Buyer.CAPACITY[buyer.service])
@@ -206,35 +212,32 @@ class DMEventHandler(EventHandler):
     with open(dir_name + '/params.log', mode='w', encoding='utf-8') as a_file:
       a_file.write(stream)
     ### Figures
-    # Plot prices paid by each buyer type
-    for b in self._buyers:
-      plt.figure()
-      plt.plot(range(1, len(b.prices)+1), b.prices)
-      plt.xlabel("Service request")
-      plt.ylabel("Price")
-      plt.grid()
-      plt.savefig(dir_name + "/{}_prices.pdf".format(b))
-    # Plot winners per buyer type
-    for b in self._buyers:
-      plt.figure()
-      plt.plot(range(1, len(self._winners[b])+1), self._winners[b], '*')
-      plt.ylim([-0.5, 1.5])
-      plt.xlabel("Service request")
-      plt.ylabel("Winner (bidder)")
-      plt.grid()
-      plt.savefig(dir_name + "/{}_winners.pdf".format(b))
-    # Plot reputation history per buyer type
-    for b in self._buyers:
-      plt.figure()
-      reps_0 = [tup[0] for tup in self._reputations[b]]
-      reps_1 = [tup[1] for tup in self._reputations[b]]
-      plt.plot(range(1, len(self._reputations[b])+1), reps_0)
-      plt.plot(range(1, len(self._reputations[b])+1), reps_1)
-      plt.xlabel("Service request")
-      plt.ylabel("Reputation")
-      plt.legend(["Bidder 0", "Bidder 1"])
-      plt.grid()
-      plt.savefig(dir_name + "/{}_reputations.pdf".format(b))
+    # Common x range
+    x_range = range(1, len(self._sr_history) + 1)
+    # Plot prices paid
+    plt.figure()
+    plt.plot(x_range, self._prices)
+    plt.xlabel("Service request")
+    plt.ylabel("Price")
+    plt.grid()
+    plt.savefig(dir_name + "/prices.pdf")
+    # Plot winners
+    plt.figure()
+    plt.plot(x_range, self._winners, '.')
+    plt.ylim([-0.5, 1.5])
+    plt.xlabel("Service request")
+    plt.ylabel("Winner (bidder)")
+    plt.grid()
+    plt.savefig(dir_name + "/winners.pdf")
+    # Plot reputation history
+    plt.figure()
+    for b in self._bidders:
+      plt.plot(x_range, self._reputation_history[b])
+    plt.xlabel("Service request")
+    plt.ylabel("Reputation")
+    plt.legend(["Bidder 0", "Bidder 1"], loc="upper left")
+    plt.grid()
+    plt.savefig(dir_name + "/reputation_history.pdf".format(b))
   
 
 class DMEventHandlerTests(unittest.TestCase):

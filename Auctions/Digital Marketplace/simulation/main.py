@@ -9,6 +9,7 @@ Copyright (c) 2012 University of Strathclyde. All rights reserved.
 from __future__ import division
 import sys
 import os
+import warnings
 
 from Buyer import *
 from Bidder import *
@@ -16,16 +17,18 @@ from DMEventHandler import *
 
 from SimulationEngine.SimulationEngine import *
 
+# Neglect NumPy overflow warnings
+warnings.simplefilter("ignore", RuntimeWarning)
 
 def main():
   ### Create scenario
   # Create Buyers
   buyers = [Buyer(0.25, Buyer.WEB_BROWSING), Buyer(0.75, Buyer.WEB_BROWSING)]
   # Create Bidders
-  bidders = [Bidder(10000, {Buyer.WEB_BROWSING: 0.5}), Bidder(5000, {Buyer.WEB_BROWSING: 0.51})]
+  bidders = [Bidder(10000, {Buyer.WEB_BROWSING: 0.75}), Bidder(5000, {Buyer.WEB_BROWSING: 0.25})]
   # Set commitment for both bidders
-  for b in bidders:
-    b.commitment = 0.5
+  # for b in bidders:
+  #   b.commitment = 0.5
   # Service requests mean interarrival rate (per second)
   interarrival_rate = 1
   # Service requests mean duration (in seconds)
@@ -45,7 +48,7 @@ def main():
   
   ### Simulate
   # Schedule finishing event
-  sim.stop(60*5)
+  sim.stop(60*60)
   # Start simulating
   sim.start()
 

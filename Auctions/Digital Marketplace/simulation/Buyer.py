@@ -67,7 +67,7 @@ class Buyer(object):
     '''
     return self._service
   
-
+  
 class BuyerTests(unittest.TestCase):
   def setUp(self):
     self.buyer = Buyer(0.5, Buyer.WEB_BROWSING)
