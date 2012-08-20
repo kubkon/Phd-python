@@ -17,6 +17,8 @@ class Buyer(object):
   Represents buyer in the Digital Marketplace; hence
   either end-user or service provider
   '''
+  # ID counter
+  ID_COUNTER = 0
   # Modeled services and capacity requirements
   WEB_BROWSING = 1
   EMAIL = 2
@@ -30,12 +32,29 @@ class Buyer(object):
     price_weight -- Price weight requested by this buyer
     service -- Service requested by this buyer
     '''
+    # Assign ID for this instance
+    self._id = Buyer.ID_COUNTER
+    # Increment ID counter
+    Buyer.ID_COUNTER += 1
     # Initialize prices paid array to empty
     self._prices = []
     # Assign price weight preference of the buyer
     self._price_weight = price_weight
     # Assign requested service
     self._service = service
+  
+  def __str__(self):
+    '''
+    Returns string representation of the object
+    '''
+    return "Buyer_" + str(self._id)
+  
+  @property
+  def id(self):
+    '''
+    Returns unique ID of the object
+    '''
+    return self._id
   
   @property
   def prices(self):

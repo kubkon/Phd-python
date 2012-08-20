@@ -21,6 +21,9 @@ class Bidder(object):
   Represents bidder in the Digital Marketplace; hence
   a network operator
   '''
+  # ID counter
+  ID_COUNTER = 0
+  
   def __init__(self, total_capacity, costs=None):
     '''
     Constructs Bidder instance
@@ -29,6 +32,10 @@ class Bidder(object):
     total_capacity -- Total capacity available
     costs -- (Optional) costs per service type
     '''
+    # Create ID for this instance
+    self._id = Bidder.ID_COUNTER
+    # Increment ID counter
+    Bidder.ID_COUNTER += 1
     # Initialize costs dict (cost per service type)
     self._costs = {} if costs is None else costs
     # Initialize reputation to default value
@@ -39,6 +46,19 @@ class Bidder(object):
     self._available_capacity = total_capacity
     # Initialize commitment
     self._commitment = 0.5
+  
+  def __str__(self):
+    '''
+    Returns string representation of the object
+    '''
+    return "Bidder_" + str(self._id)
+  
+  @property
+  def id(self):
+    '''
+    Returns unique ID of the object
+    '''
+    return self._id
   
   @property
   def costs(self):

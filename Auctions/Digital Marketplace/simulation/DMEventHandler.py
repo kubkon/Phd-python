@@ -235,9 +235,18 @@ class DMEventHandler(EventHandler):
       plt.plot(x_range, self._reputation_history[b])
     plt.xlabel("Service request")
     plt.ylabel("Reputation")
-    plt.legend(["Bidder 0", "Bidder 1"], loc="upper left")
+    plt.legend([b for b in self._bidders], loc="upper left")
     plt.grid()
     plt.savefig(dir_name + "/reputation_history.pdf".format(b))
+    # Plot service request history
+    sr_history = list(map(lambda x: x.id, self._sr_history))
+    plt.figure()
+    plt.plot(x_range, sr_history, '.')
+    plt.ylim([-0.5, max(sr_history) + 0.5])
+    plt.xlabel("Service request")
+    plt.ylabel("Buyer")
+    plt.grid()
+    plt.savefig(dir_name + "/sr_history.pdf")
   
 
 class DMEventHandlerTests(unittest.TestCase):
