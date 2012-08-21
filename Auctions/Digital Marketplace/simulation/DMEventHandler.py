@@ -10,7 +10,6 @@ Copyright (c) 2012 University of Strathclyde. All rights reserved.
 import sys
 import os
 import unittest
-import numpy as np
 import matplotlib.pyplot as plt
 
 from Buyer import *
@@ -23,11 +22,11 @@ class DMEventHandler(EventHandler):
   '''
   Digital Marketplace specific event handler
   '''
-  def __init__(self, simulation_engine):
+  def __init__(self):
     '''
     Constructs DMEventHandler instance
     '''
-    super().__init__(simulation_engine)
+    super().__init__()
     ### Simulation building blocks and params
     # Initialize buyers
     self._buyers = []
@@ -136,10 +135,11 @@ class DMEventHandler(EventHandler):
     '''
     Schedules next service request event
     '''
+    prng = self._simulation_engine.prng
     # Randomize through buyer types
-    buyer = np.random.randint(len(self._buyers))
+    buyer = prng.randint(len(self._buyers))
     # Calculate interarrival time
-    delta_time = np.random.exponential(1 / self._interarrival_rate)
+    delta_time = prng.exponential(1 / self._interarrival_rate)
     # Create next service request event
     event = Event(self._buyers[buyer], base_time + delta_time)
     # Schedule the event
@@ -150,7 +150,7 @@ class DMEventHandler(EventHandler):
     Schedules next service request termination event
     '''
     # Calculate termination time
-    delta_time = np.random.exponential(self._duration)
+    delta_time = self._simulation_engine.prng.exponential(self._duration)
     # Create next service termination event
     event = Event(event_type, base_time + delta_time, buyer=buyer)
     # Schedule the event
@@ -177,7 +177,7 @@ class DMEventHandler(EventHandler):
       winner = 1
     else:
       # Tie
-      winner = np.random.randint(2)
+      winner = self._simulation_engine.prng.randint(2)
     # Mine data: prices, winners, reputation history and service request history
     self._prices = self._prices + [bids[winner]] if self._prices else [bids[winner]]
     self._winners = self._winners + [winner] if self._winners else [winner]

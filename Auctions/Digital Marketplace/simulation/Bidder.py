@@ -45,7 +45,7 @@ class Bidder(object):
     # Initialize available capacity
     self._available_capacity = total_capacity
     # Initialize commitment
-    self._commitment = 0.5
+    self._commitment = 0.8
   
   def __str__(self):
     '''
@@ -104,8 +104,10 @@ class Bidder(object):
     '''
     # Check if service type already exists in dict
     if service_type not in self._costs:
+      # Get SimulationEngine instance
+      sim = SimulationEngineFactory.get_instance()
       # Generate new cost for service type
-      self._costs[service_type] = np.random.uniform(0,1)
+      self._costs[service_type] = sim.prng.uniform(0,1)
   
   def _update_reputation(self, success_report):
     '''

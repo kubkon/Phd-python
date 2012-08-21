@@ -51,3 +51,4 @@ class NumericalToolbox(object):
         bids = np.linspace(b[0], v1[1], granularity)
         graph_vf = list(map(vf, bids))
     return bids, graph_vf
+  
