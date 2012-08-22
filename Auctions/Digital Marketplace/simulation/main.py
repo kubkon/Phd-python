@@ -7,27 +7,23 @@ Created by Jakub Konka on 2012-07-23.
 Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
 from __future__ import division
-import sys
-import os
-import warnings
+
+import dm
 import numpy as np
-
-from Buyer import *
-from Bidder import *
-from DMEventHandler import *
-
-from SimulationEngine.SimulationEngineFactory import *
+import warnings
+import sim
 
 # Neglect NumPy overflow warnings
 warnings.simplefilter("ignore", RuntimeWarning)
 
+
 def main():
   ### Create scenario
   # Create Buyers
-  # buyers = [Buyer(0.25, Buyer.WEB_BROWSING), Buyer(0.75, Buyer.WEB_BROWSING)]
-  buyers = [Buyer(0.5, Buyer.WEB_BROWSING)]
+  # buyers = [dm.Buyer(0.25, dm.Buyer.WEB_BROWSING), dm.Buyer(0.75, dm.Buyer.WEB_BROWSING)]
+  buyers = [dm.Buyer(0.5, dm.Buyer.WEB_BROWSING)]
   # Create Bidders
-  bidders = [Bidder(10000, {Buyer.WEB_BROWSING: 0.75}), Bidder(5000, {Buyer.WEB_BROWSING: 0.25})]
+  bidders = [dm.Bidder(10000, {dm.Buyer.WEB_BROWSING: 0.75}), dm.Bidder(5000, {dm.Buyer.WEB_BROWSING: 0.5})]
   # Set commitment for both bidders
   for b in bidders:
     b.commitment = 0.5
@@ -38,12 +34,12 @@ def main():
   
   ### Initialize
   # Create new simulation engine
-  sim = SimulationEngineFactory.get_instance()
+  se = sim.SimulationEngineFactory.get_instance()
   # Use NumPy PRNG with custom seed
-  prng = np.random.RandomState()
-  sim.prng = prng
+  prng = np.random.RandomState(1000)
+  se.prng = prng
   # Create simulation specific event handler
-  event_handler = DMEventHandler()
+  event_handler = dm.DMEventHandler()
   # Add buyers and bidders to simulation engine
   for buyer in buyers: event_handler.add_buyer(buyer)
   for bidder in bidders: event_handler.add_bidder(bidder)
@@ -53,9 +49,9 @@ def main():
   
   ### Simulate
   # Schedule finishing event
-  sim.stop(60*60)
+  se.stop(60*60)
   # Start simulating
-  sim.start()
+  se.start()
 
 
 if __name__ == '__main__':
