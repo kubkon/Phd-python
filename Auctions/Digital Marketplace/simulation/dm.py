@@ -55,10 +55,10 @@ class NumericalToolbox(object):
   
 
 class Buyer(object):
-  '''
+  """
   Represents buyer in the Digital Marketplace; hence
   either end-user or service provider
-  '''
+  """
   # ID counter
   ID_COUNTER = 0
   # Modeled services and capacity requirements
@@ -67,13 +67,13 @@ class Buyer(object):
   CAPACITY = {WEB_BROWSING: 512, EMAIL: 256}
   
   def __init__(self, price_weight, service):
-    '''
+    """
     Constructs Buyer instance
     
     Keyword arguments:
     price_weight -- Price weight requested by this buyer
     service -- Service requested by this buyer
-    '''
+    """
     # Assign ID for this instance
     self._id = Buyer.ID_COUNTER
     # Increment ID counter
@@ -86,65 +86,62 @@ class Buyer(object):
     self._service = service
   
   def __str__(self):
-    '''
-    Returns string representation of the object
-    '''
     return "Buyer_" + str(self._id)
   
   @property
   def id(self):
-    '''
+    """
     Returns unique ID of the object
-    '''
+    """
     return self._id
   
   @property
   def prices(self):
-    '''
+    """
     Returns prices paid array
-    '''
+    """
     return self._prices
   
   def add_price(self, sr_number, price):
-    '''
+    """
     Adds price to the prices paid array
     
     Keyword arguments:
     price -- Price to be added
-    '''
+    """
     self._prices[sr_number] = price
   
   @property
   def price_weight(self):
-    '''
+    """
     Returns requested price weight of this buyer
-    '''
+    """
     return self._price_weight
   
   @property
   def service(self):
-    '''
+    """
     Returns service requested by this buyer
-    '''
+    """
     return self._service
   
 
 class Bidder(object):
-  '''
+  """
   Represents bidder in the Digital Marketplace; hence
   a network operator
-  '''
+  """
   # ID counter
   ID_COUNTER = 0
   
   def __init__(self, total_capacity, costs=None):
-    '''
+    """
     Constructs Bidder instance
     
     Keyword arguments:
     total_capacity -- Total capacity available
     costs -- (Optional) costs per service type
-    '''
+    """
     # Create ID for this instance
     self._id = Bidder.ID_COUNTER
     # Increment ID counter
@@ -165,30 +162,27 @@ class Bidder(object):
     self._commitment = 0.8
   
   def __str__(self):
-    '''
-    Returns string representation of the object
-    '''
     return "Bidder_" + str(self._id)
   
   @property
   def id(self):
-    '''
+    """
     Returns unique ID of the object
-    '''
+    """
     return self._id
   
   @property
   def costs(self):
-    '''
+    """
     Returns costs dict
-    '''
+    """
     return self._costs
   
   @property
   def reputation(self):
-    '''
+    """
     Returns current reputation of the bidder
-    '''
+    """
     return self._reputation
   
   @property
@@ -207,32 +201,32 @@ class Bidder(object):
   
   @property
   def available_capacity(self):
-    '''
+    """
     Returns available capacity
-    '''
+    """
     return self._available_capacity
   
   @property
   def commitment(self):
-    '''
+    """
     Returns commitment (ranging from 0.0 to 1.0)
-    '''
+    """
     return self._commitment
   
   @commitment.setter
   def commitment(self, commitment):
-    '''
+    """
     Sets commitment (can be from 0.0 to 1.0)
-    '''
+    """
     self._commitment = commitment
   
   def _generate_cost(self, service_type):
-    '''
+    """
     Generates cost for each requested service type
     
     Keyword arguments:
     service_type -- Type of requested service
-    '''
+    """
     # Check if service type already exists in dict
     if service_type not in self._costs:
       # Get SimulationEngine instance
@@ -241,12 +235,12 @@ class Bidder(object):
       self._costs[service_type] = se.prng.uniform(0,1)
   
   def _update_reputation(self, success_report):
-    '''
+    """
     Updates reputation according to commitment and success report
     
     Keyword arguments:
     success_report -- Success report of current service request
-    '''
+    """
     if success_report:
       self._reputation = self._reputation - 0.01 if self._reputation >= 0.01 else 0.0
     else:
@@ -254,14 +248,14 @@ class Bidder(object):
       self._reputation = self._reputation + param if self._reputation + param <= 1.0 else 1.0
   
   def submit_bid(self, service_type, price_weight, enemy_reputation):
-    '''
+    """
     Returns bid of the bidder for the specified params
     
     Keyword arguments:
     service_type -- Type of requested service
     price_weight -- Price weight requested by the buyer
     enemy_reputation -- Reputation of the other bidder
-    '''
+    """
     # Generate cost for service type
     self._generate_cost(service_type)
     # Save current reputation
@@ -284,13 +278,13 @@ class Bidder(object):
     return bid
   
   def service_request(self, sr_number, sr_capacity):
-    '''
+    """
     Updates params as if serviced buyer's service request
     
     Keyword arguments:
     sr_number -- Auction (SR) number
     sr_capacity -- Required capacity by the service
-    '''
+    """
     # Save current profit in a profit history dict
     self._profit_history[sr_number] = self._current_profit
     # Update capacity and reputation
@@ -306,22 +300,22 @@ class Bidder(object):
       self._update_reputation(False)
   
   def finish_servicing_request(self, sr_capacity):
-    '''
+    """
     Updates params when finishing servicing buyers service request
-    '''
+    """
     # Update available capacity
     cap_sum = self._available_capacity + sr_capacity
     self._available_capacity = cap_sum if cap_sum < self._total_capacity else self._total_capacity
   
 
 class DMEventHandler(sim.EventHandler):
-  '''
+  """
   Digital Marketplace specific event handler
-  '''
+  """
   def __init__(self):
-    '''
+    """
     Constructs DMEventHandler instance
-    '''
+    """
     super().__init__()
     ### Simulation building blocks and params
     # Initialize buyers
@@ -337,75 +331,75 @@ class DMEventHandler(sim.EventHandler):
   
   @property
   def buyers(self):
-    '''
+    """
     Returns list of buyers
-    '''
+    """
     return self._buyers
   
   def add_buyer(self, buyer):
-    '''
+    """
     Adds Buyer instance
-    '''
+    """
     self._buyers += [buyer]
   
   @property
   def bidders(self):
-    '''
+    """
     Returns list of bidders
-    '''
+    """
     return self._bidders
   
   def add_bidder(self, bidder):
-    '''
+    """
     Adds Bidder instance
-    '''
+    """
     self._bidders += [bidder]
   
   @property
   def interarrival_rate(self):
-    '''
+    """
     Returns service requests mean interarrival rate
-    '''
+    """
     return self._interarrival_rate
   
   @interarrival_rate.setter
   def interarrival_rate(self, interarrival_rate):
-    '''
+    """
     Sets service requests mean interarrival rate
-    '''
+    """
     self._interarrival_rate = interarrival_rate
   
   @property
   def duration(self):
-    '''
+    """
     Returns service requests mean duration
-    '''
+    """
     return self._duration
   
   @duration.setter
   def duration(self, duration):
-    '''
+    """
     Sets service requests mean duration
-    '''
+    """
     self._duration = duration
   
   def _handle_start(self):
-    '''
+    """
     Overriden
-    '''
+    """
     self._schedule_sr_event(self._simulation_engine.simulation_time)
   
   def _handle_stop(self):
-    '''
+    """
     Overriden
-    '''
+    """
     # Save results of the simulation
     self._save_results()
   
   def _handle_event(self, event):
-    '''
+    """
     Overriden
-    '''
+    """
     if event.identifier in self._buyers:
       # Run auction
       self._run_auction(event)
@@ -421,9 +415,9 @@ class DMEventHandler(sim.EventHandler):
       pass
   
   def _schedule_sr_event(self, base_time):
-    '''
+    """
     Schedules next service request event
-    '''
+    """
     prng = self._simulation_engine.prng
     # Randomize through buyer types
     buyer = prng.randint(len(self._buyers))
@@ -435,9 +429,9 @@ class DMEventHandler(sim.EventHandler):
     self._simulation_engine.schedule(event)
   
   def _schedule_st_event(self, event_type, base_time, buyer):
-    '''
+    """
     Schedules next service request termination event
-    '''
+    """
     # Calculate termination time
     delta_time = self._simulation_engine.prng.exponential(self._duration)
     # Create next service termination event
@@ -446,9 +440,9 @@ class DMEventHandler(sim.EventHandler):
     self._simulation_engine.schedule(event)
   
   def _run_auction(self, event):
-    '''
+    """
     Runs DM auction
-    '''
+    """
     # Increment service request counter
     self._sr_count += 1
     # Get price weight of current bidder type
@@ -476,9 +470,9 @@ class DMEventHandler(sim.EventHandler):
     self._schedule_st_event(self._bidders[winner], event.time, buyer)
   
   def _save_results(self):
-    '''
+    """
     Saves results of the simulation
-    '''
+    """
     ### Params
     # Prepare stream
     bar = "-"*50
