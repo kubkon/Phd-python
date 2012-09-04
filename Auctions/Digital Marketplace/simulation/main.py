@@ -7,6 +7,7 @@ Created by Jakub Konka on 2012-07-23.
 Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
 from __future__ import division
+import sys
 
 import dm
 import numpy as np
@@ -20,8 +21,8 @@ warnings.simplefilter("ignore", RuntimeWarning)
 def main():
   ### Create scenario
   # Create Buyers
-  # buyers = [dm.Buyer(0.25, dm.Buyer.WEB_BROWSING), dm.Buyer(0.75, dm.Buyer.WEB_BROWSING)]
-  buyers = [dm.Buyer(0.5, dm.Buyer.WEB_BROWSING)]
+  buyers = [dm.Buyer(0.25, dm.Buyer.WEB_BROWSING), dm.Buyer(0.75, dm.Buyer.WEB_BROWSING)]
+  # buyers = [dm.Buyer(0.5, dm.Buyer.WEB_BROWSING)]
   # Create Bidders
   bidders = [dm.Bidder(10000, {dm.Buyer.WEB_BROWSING: 0.75}), dm.Bidder(5000, {dm.Buyer.WEB_BROWSING: 0.5})]
   # Set commitment for both bidders
@@ -48,8 +49,14 @@ def main():
   event_handler.duration = duration
   
   ### Simulate
+  # Read from args list desired simulation duration
+  try:
+    sim_duration = int(sys.argv[1])
+  except (ValueError, IndexError):
+    sim_duration = 3600
+  print("Simulation duration set to: {}".format(sim_duration))
   # Schedule finishing event
-  se.stop(60*60)
+  se.stop(sim_duration)
   # Start simulating
   se.start()
 

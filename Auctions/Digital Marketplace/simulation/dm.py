@@ -78,8 +78,8 @@ class Buyer(object):
     self._id = Buyer.ID_COUNTER
     # Increment ID counter
     Buyer.ID_COUNTER += 1
-    # Initialize prices paid array to empty
-    self._prices = []
+    # Initialize prices paid dict to empty (key=service request number)
+    self._prices = {}
     # Assign price weight preference of the buyer
     self._price_weight = price_weight
     # Assign requested service
@@ -105,14 +105,14 @@ class Buyer(object):
     '''
     return self._prices
   
-  def add_price(self, price):
+  def add_price(self, sr_number, price):
     '''
     Adds price to the prices paid array
     
     Keyword arguments:
     price -- Price to be added
     '''
-    self._prices += [price]
+    self._prices[sr_number] = price
   
   @property
   def price_weight(self):
@@ -153,6 +153,10 @@ class Bidder(object):
     self._costs = {} if costs is None else costs
     # Initialize reputation to default value
     self._reputation = 0.5
+    # Initialize reputation history list
+    self._reputation_history = []
+    # Initialize profit history dict (key: auction number)
+    self._profit_history = {}
     # Assign total capacity available to the bidder
     self._total_capacity = total_capacity
     # Initialize available capacity
@@ -186,6 +190,20 @@ class Bidder(object):
     Returns current reputation of the bidder
     '''
     return self._reputation
+  
+  @property
+  def reputation_history(self):
+    """
+    Returns reputation history of the bidder
+    """
+    return self._reputation_history
+  
+  @property
+  def profit_history(self):
+    """
+    Returns profit history of the bidder
+    """
+    return self._profit_history
   
   @property
   def available_capacity(self):
@@ -246,6 +264,8 @@ class Bidder(object):
     '''
     # Generate cost for service type
     self._generate_cost(service_type)
+    # Save current reputation
+    self._reputation_history += [self._reputation]
     # Submit bid
     bid = 0.0
     if price_weight != 0.0 and price_weight != 1.0 and self._reputation != enemy_reputation:
@@ -259,15 +279,21 @@ class Bidder(object):
     else:
       # Calculate bid
       bid = (1 + self._costs[service_type]) / 2
+    # Temporarily, save profit assuming a win
+    self._current_profit = bid - self._costs[service_type] if price_weight != 0.0 else "Inf"
     return bid
   
-  def service_request(self, sr_capacity):
+  def service_request(self, sr_number, sr_capacity):
     '''
-    Updates params as if serviced buyers service request
+    Updates params as if serviced buyer's service request
     
     Keyword arguments:
+    sr_number -- Auction (SR) number
     sr_capacity -- Required capacity by the service
     '''
+    # Save current profit in a profit history dict
+    self._profit_history[sr_number] = self._current_profit
+    # Update capacity and reputation
     if self._available_capacity >= sr_capacity:
       # Update available capacity
       self._available_capacity -= sr_capacity
@@ -306,15 +332,8 @@ class DMEventHandler(sim.EventHandler):
     self._interarrival_rate = 0
     # Initialize service requests mean duration
     self._duration = 0
-    ### Output data
-    # Initialize service request history list
-    self._sr_history = []
-    # Initialize prices paid list
-    self._prices = []
-    # Initialize winners list
-    self._winners = []
-    # Initialize reputation history dict (key: bidder)
-    self._reputation_history = {}
+    # Initialize service request counter
+    self._sr_count = 0
   
   @property
   def buyers(self):
@@ -430,6 +449,8 @@ class DMEventHandler(sim.EventHandler):
     '''
     Runs DM auction
     '''
+    # Increment service request counter
+    self._sr_count += 1
     # Get price weight of current bidder type
     buyer = event.identifier
     w = buyer.price_weight
@@ -448,15 +469,9 @@ class DMEventHandler(sim.EventHandler):
     else:
       # Tie
       winner = self._simulation_engine.prng.randint(2)
-    # Mine data: prices, winners, reputation history and service request history
-    self._prices = self._prices + [bids[winner]] if self._prices else [bids[winner]]
-    self._winners = self._winners + [winner] if self._winners else [winner]
-    for b in self._bidders:
-      self._reputation_history[b] = self._reputation_history[b] + [b.reputation] if b in self._reputation_history else [b.reputation]
-    self._sr_history += [buyer] if self._sr_history else [buyer]
     # Update system state
-    buyer.add_price(bids[winner])
-    self._bidders[winner].service_request(Buyer.CAPACITY[buyer.service])
+    buyer.add_price(self._sr_count, bids[winner])
+    self._bidders[winner].service_request(self._sr_count, Buyer.CAPACITY[buyer.service])
     # Schedule termination event
     self._schedule_st_event(self._bidders[winner], event.time, buyer)
   
@@ -482,41 +497,36 @@ class DMEventHandler(sim.EventHandler):
     with open(dir_name + '/params.log', mode='w', encoding='utf-8') as a_file:
       a_file.write(stream)
     ### Figures
-    # Common x range
-    x_range = range(1, len(self._sr_history) + 1)
     # Plot prices paid
     plt.figure()
-    plt.plot(x_range, self._prices)
+    for buyer in self._buyers:
+      plt.plot(list(buyer.prices.keys()), list(buyer.prices.values()), '.')
     plt.xlabel("Service request")
     plt.ylabel("Price")
+    plt.legend([b for b in self._buyers], loc="upper center",
+               bbox_to_anchor=(0.5, 1.1), fancybox=True, shadow=True)
     plt.grid()
     plt.savefig(dir_name + "/prices.pdf")
-    # Plot winners
-    plt.figure()
-    plt.plot(x_range, self._winners, '.')
-    plt.ylim([-0.5, 1.5])
-    plt.xlabel("Service request")
-    plt.ylabel("Winner (bidder)")
-    plt.grid()
-    plt.savefig(dir_name + "/winners.pdf")
     # Plot reputation history
     plt.figure()
     for b in self._bidders:
-      plt.plot(x_range, self._reputation_history[b])
+      plt.plot(range(1, self._sr_count + 1), b.reputation_history)
     plt.xlabel("Service request")
     plt.ylabel("Reputation")
-    plt.legend([b for b in self._bidders], loc="upper left")
+    plt.legend([b for b in self._bidders], loc="upper center",
+               bbox_to_anchor=(0.5, 1.1), fancybox=True, shadow=True)
     plt.grid()
-    plt.savefig(dir_name + "/reputation_history.pdf".format(b))
-    # Plot service request history
-    sr_history = list(map(lambda x: x.id, self._sr_history))
+    plt.savefig(dir_name + "/reputation_history.pdf")
+    # Plot profit history for each bidder
     plt.figure()
-    plt.plot(x_range, sr_history, '.')
-    plt.ylim([-0.5, max(sr_history) + 0.5])
+    for b in self._bidders:
+      plt.plot(list(b.profit_history.keys()), list(b.profit_history.values()), '.')
     plt.xlabel("Service request")
-    plt.ylabel("Buyer")
+    plt.ylabel("Profit")
+    plt.legend([b for b in self._bidders], loc="upper center",
+               bbox_to_anchor=(0.5, 1.1), fancybox=True, shadow=True)
     plt.grid()
-    plt.savefig(dir_name + "/sr_history.pdf")
+    plt.savefig(dir_name + "/profit_history.pdf")
   
 
 class BuyerTests(unittest.TestCase):
