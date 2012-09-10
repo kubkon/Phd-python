@@ -11,6 +11,7 @@ import numpy as np
 import os
 import sim
 import unittest
+from itertools import cycle
 
 
 class NumericalToolbox(object):
@@ -491,10 +492,13 @@ class DMEventHandler(sim.EventHandler):
     with open(dir_name + '/params.log', mode='w', encoding='utf-8') as a_file:
       a_file.write(stream)
     ### Figures
+    # Create line and marker style cyclers
+    linecycler = cycle(["-", "--", "-.", ":"])
+    markercycler = cycle(["o", "s", "v", "^", "<", ">", "1", "2", "3", "4", "p", "*", "x", "h"])
     # Plot prices paid
     plt.figure()
     for buyer in self._buyers:
-      plt.plot(list(buyer.prices.keys()), list(buyer.prices.values()), '.')
+      plt.plot(list(buyer.prices.keys()), list(buyer.prices.values()), next(markercycler))
     plt.xlabel("Service request")
     plt.ylabel("Price")
     plt.legend([b for b in self._buyers], loc="upper center",
@@ -504,7 +508,7 @@ class DMEventHandler(sim.EventHandler):
     # Plot reputation history
     plt.figure()
     for b in self._bidders:
-      plt.plot(range(1, self._sr_count + 1), b.reputation_history)
+      plt.plot(range(1, self._sr_count + 1), b.reputation_history, next(linecycler))
     plt.xlabel("Service request")
     plt.ylabel("Reputation")
     plt.legend([b for b in self._bidders], loc="upper center",
@@ -514,7 +518,7 @@ class DMEventHandler(sim.EventHandler):
     # Plot profit history for each bidder
     plt.figure()
     for b in self._bidders:
-      plt.plot(list(b.profit_history.keys()), list(b.profit_history.values()), '.')
+      plt.plot(list(b.profit_history.keys()), list(b.profit_history.values()), next(markercycler))
     plt.xlabel("Service request")
     plt.ylabel("Profit")
     plt.legend([b for b in self._bidders], loc="upper center",

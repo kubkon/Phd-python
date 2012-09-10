@@ -24,7 +24,7 @@ def main():
   buyers = [dm.Buyer(0.25, dm.Buyer.WEB_BROWSING), dm.Buyer(0.75, dm.Buyer.WEB_BROWSING)]
   # buyers = [dm.Buyer(0.5, dm.Buyer.WEB_BROWSING)]
   # Create Bidders
-  bidders = [dm.Bidder(10000, {dm.Buyer.WEB_BROWSING: 0.75}), dm.Bidder(5000, {dm.Buyer.WEB_BROWSING: 0.5})]
+  bidders = [dm.Bidder(10000, {dm.Buyer.WEB_BROWSING: 0.25}), dm.Bidder(5000, {dm.Buyer.WEB_BROWSING: 0.75})]
   # Set commitment for both bidders
   for b in bidders:
     b.commitment = 0.5
