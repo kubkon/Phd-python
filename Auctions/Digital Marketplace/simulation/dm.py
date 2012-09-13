@@ -492,13 +492,13 @@ class DMEventHandler(sim.EventHandler):
     with open(dir_name + '/params.log', mode='w', encoding='utf-8') as a_file:
       a_file.write(stream)
     ### Figures
-    # Create line and marker style cyclers
-    linecycler = cycle(["-", "--", "-.", ":"])
-    markercycler = cycle(["o", "s", "v", "^", "<", ">", "1", "2", "3", "4", "p", "*", "x", "h"])
+    # Create line and marker style lists
+    styles = {"line": ["-", "--", "-.", ":"], "marker": ["o", "*", "v", "^", "<", ">", "1", "2", "3", "4", "p", "s", "x", "h"]}
     # Plot prices paid
     plt.figure()
+    cycler = cycle(styles["line"])
     for buyer in self._buyers:
-      plt.plot(list(buyer.prices.keys()), list(buyer.prices.values()), next(markercycler))
+      plt.plot(list(buyer.prices.keys()), list(buyer.prices.values()), next(cycler))
     plt.xlabel("Service request")
     plt.ylabel("Price")
     plt.legend([b for b in self._buyers], loc="upper center",
@@ -507,8 +507,9 @@ class DMEventHandler(sim.EventHandler):
     plt.savefig(dir_name + "/prices.pdf")
     # Plot reputation history
     plt.figure()
+    cycler = cycle(styles["line"])
     for b in self._bidders:
-      plt.plot(range(1, self._sr_count + 1), b.reputation_history, next(linecycler))
+      plt.plot(range(1, self._sr_count + 1), b.reputation_history, next(cycler))
     plt.xlabel("Service request")
     plt.ylabel("Reputation")
     plt.legend([b for b in self._bidders], loc="upper center",
@@ -517,8 +518,9 @@ class DMEventHandler(sim.EventHandler):
     plt.savefig(dir_name + "/reputation_history.pdf")
     # Plot profit history for each bidder
     plt.figure()
+    cycler = cycle(styles["marker"])
     for b in self._bidders:
-      plt.plot(list(b.profit_history.keys()), list(b.profit_history.values()), next(markercycler))
+      plt.plot(list(b.profit_history.keys()), list(b.profit_history.values()), next(cycler))
     plt.xlabel("Service request")
     plt.ylabel("Profit")
     plt.legend([b for b in self._bidders], loc="upper center",
