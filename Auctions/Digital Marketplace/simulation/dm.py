@@ -14,7 +14,7 @@ import unittest
 from itertools import cycle
 
 
-class NumericalToolbox(object):
+class NumericalToolbox:
   @classmethod
   def estimate_bid_hat_function(cls, w, reps, granularity=1000):
     # Calculate params
@@ -55,7 +55,7 @@ class NumericalToolbox(object):
     return bids, graph_vf
   
 
-class Buyer(object):
+class Buyer:
   """
   Represents buyer in the Digital Marketplace; hence
   either end-user or service provider
@@ -127,7 +127,7 @@ class Buyer(object):
     return self._service
   
 
-class Bidder(object):
+class Bidder:
   """
   Represents bidder in the Digital Marketplace; hence
   a network operator
@@ -231,7 +231,7 @@ class Bidder(object):
     # Check if service type already exists in dict
     if service_type not in self._costs:
       # Get SimulationEngine instance
-      se = sim.SimulationEngineFactory.get_instance()
+      se = sim.SimulationEngine()
       # Generate new cost for service type
       self._costs[service_type] = se.prng.uniform(0,1)
   

@@ -21,10 +21,10 @@ warnings.simplefilter("ignore", RuntimeWarning)
 def main():
   ### Create scenario
   # Create Buyers
-  buyers = [dm.Buyer(0.25, dm.Buyer.WEB_BROWSING), dm.Buyer(0.75, dm.Buyer.WEB_BROWSING)]
-  # buyers = [dm.Buyer(0.5, dm.Buyer.WEB_BROWSING)]
+  # buyers = [dm.Buyer(0.25, dm.Buyer.WEB_BROWSING), dm.Buyer(0.75, dm.Buyer.WEB_BROWSING)]
+  buyers = [dm.Buyer(0.5, dm.Buyer.WEB_BROWSING)]
   # Create Bidders
-  bidders = [dm.Bidder(10000, {dm.Buyer.WEB_BROWSING: 0.25}), dm.Bidder(5000, {dm.Buyer.WEB_BROWSING: 0.75})]
+  bidders = [dm.Bidder(10000, {dm.Buyer.WEB_BROWSING: 0.5}), dm.Bidder(10000, {dm.Buyer.WEB_BROWSING: 0.5})]
   # Set commitment for both bidders
   for b in bidders:
     b.commitment = 0.5
@@ -35,7 +35,7 @@ def main():
   
   ### Initialize
   # Create new simulation engine
-  se = sim.SimulationEngineFactory.get_instance()
+  se = sim.SimulationEngine()
   # Use NumPy PRNG with custom seed
   prng = np.random.RandomState(1000)
   se.prng = prng
