@@ -36,8 +36,8 @@ def main():
     b.commitment = 0.5
   # Service requests mean interarrival rate (per second)
   interarrival_rate = 1
-  # Service requests mean duration (in seconds)
-  duration = 60*5
+  # Service requests constant duration (in seconds)
+  duration = 2.5 * 60
   # Create simulation specific event handler
   event_handler = dm.DMEventHandler()
   # Add buyers and bidders to simulation engine

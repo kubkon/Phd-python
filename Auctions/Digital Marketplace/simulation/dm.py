@@ -325,7 +325,7 @@ class DMEventHandler(sim.EventHandler):
     self._bidders = []
     # Initialize service requests mean interarrival rate
     self._interarrival_rate = 0
-    # Initialize service requests mean duration
+    # Initialize service requests duration
     self._duration = 0
     # Initialize service request counter
     self._sr_count = 0
@@ -435,10 +435,8 @@ class DMEventHandler(sim.EventHandler):
     """
     Schedules next service request termination event
     """
-    # Calculate termination time
-    delta_time = self._simulation_engine.prng.exponential(self._duration)
     # Create next service termination event
-    event = sim.Event(event_type, base_time + delta_time, buyer=buyer)
+    event = sim.Event(event_type, base_time + self._duration, buyer=buyer)
     # Schedule the event
     self._simulation_engine.schedule(event)
   
