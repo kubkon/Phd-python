@@ -21,8 +21,8 @@ warnings.simplefilter("ignore", RuntimeWarning)
 def main():
   ### Create simulation-specific scenario
   # Create Bidders
-  bidders = [dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5}),
-             dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5})]
+  bidders = [dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5, dm.DMEventHandler.EMAIL: 0.45}),
+             dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5, dm.DMEventHandler.EMAIL: 0.45})]
   # Set commitment for both bidders
   for b in bidders:
     b.commitment = 0.5

@@ -263,6 +263,8 @@ class DMEventHandler(sim.EventHandler):
     self._duration = 0
     # Initialize service request counter
     self._sr_count = 0
+    # Initialize prices history list
+    self._prices = []
   
   @property
   def bidders(self):
@@ -330,7 +332,7 @@ class DMEventHandler(sim.EventHandler):
       self._schedule_sr_event(event.time)
     elif event.identifier == DMEventHandler.ST_EVENT:
       # A bidder finished handling request
-      bidder, service_type = event.kwargs.get('bidder', None)
+      bidder, service_type = event.kwargs.get('bundle', None)
       bidder.finish_servicing_request(DMEventHandler.BITRATES[service_type])
     else:
       # End of simulation event
@@ -383,7 +385,8 @@ class DMEventHandler(sim.EventHandler):
     else:
       # Tie
       winner = self._simulation_engine.prng.randint(2)
-    # Update system state
+    # Collect statistics & update system state
+    self._prices += [bids[winner]]
     winner = self._bidders[winner]
     winner.service_request(self._sr_count, DMEventHandler.BITRATES[service_type])
     # Schedule termination event
@@ -394,12 +397,10 @@ class DMEventHandler(sim.EventHandler):
     Saves results of the simulation
     """
     ### Params
-    # Prepare stream
-    bar = "-"*50
+    # Prepare output stream
     stream = "Bidders:\n"
     for bidder in self._bidders:
       stream += "\n{}\ncosts: {}\ncommitment: {}\n".format(bidder, bidder.costs, bidder.commitment)
-    stream += bar
     # Create output directory if doesn't exist already
     dir_name = "out"
     if not os.path.exists(dir_name):
@@ -409,10 +410,14 @@ class DMEventHandler(sim.EventHandler):
       a_file.write(stream)
     ### Figures
     # Create line and marker style lists
-    styles = {"line": ["-", "--", "-.", ":"], "marker": ["o", "*", "v", "^", "<", ">", "1", "2", "3", "4", "p", "s", "x", "h"]}
+    styles = {"line": ["-", "--", "-.", ":"], "marker": [".", "*", "v", "^", "<", ">", "1", "2", "3", "4", "p", "s", "x", "h"]}
     # Plot prices paid
     plt.figure()
-    cycler = cycle(styles["line"])
+    plt.plot(range(1, self._sr_count + 1), self._prices, '.')
+    plt.xlabel("Service request")
+    plt.ylabel("Price (per unit service)")
+    plt.grid()
+    plt.savefig(dir_name + "/prices.pdf")
     # Plot reputation history
     plt.figure()
     cycler = cycle(styles["line"])
@@ -430,39 +435,16 @@ class DMEventHandler(sim.EventHandler):
     for b in self._bidders:
       plt.plot(list(b.profit_history.keys()), list(b.profit_history.values()), next(cycler))
     plt.xlabel("Service request")
-    plt.ylabel("Profit")
+    plt.ylabel("Profit (per unit service)")
     plt.legend([b for b in self._bidders], loc="upper center",
                bbox_to_anchor=(0.5, 1.1), fancybox=True, shadow=True)
     plt.grid()
     plt.savefig(dir_name + "/profit_history.pdf")
   
 
-class BuyerTests(unittest.TestCase):
-  def setUp(self):
-    self.buyer = Buyer(0.5, Buyer.WEB_BROWSING)
-  
-  def test_properties(self):
-    self.assertEqual(self.buyer.price_weight, 0.5)
-    self.assertEqual(self.buyer.service, Buyer.WEB_BROWSING)
-  
-  def test_prices(self):
-    [self.buyer.add_price(i) for i in range(5)]
-    self.assertEqual(self.buyer.prices, [0,1,2,3,4])
-  
-
 class BidderTests(unittest.TestCase):
   def setUp(self):
-    self.bidder = Bidder(100)
-  
-  def test_generate_cost_v1(self):
-    buyers = [Buyer(0.25, Buyer.WEB_BROWSING), Buyer(0.5, Buyer.WEB_BROWSING)]
-    for buyer in buyers: self.bidder._generate_cost(buyer.service)
-    self.assertEqual(self.bidder.costs.keys(), {Buyer.WEB_BROWSING})
-  
-  def test_generate_cost_v2(self):
-    buyers = [Buyer(0.25, Buyer.WEB_BROWSING), Buyer(0.5, Buyer.EMAIL)]
-    for buyer in buyers: self.bidder._generate_cost(buyer.service)
-    self.assertEqual(self.bidder.costs.keys(), {Buyer.WEB_BROWSING, Buyer.EMAIL})
+    pass
   
 
 class DMEventHandlerTests(unittest.TestCase):
