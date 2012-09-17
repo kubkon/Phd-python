@@ -344,20 +344,19 @@ class DMEventHandler(sim.EventHandler):
     # Generate buyer (service type & price weight pair)
     price_weight = prng.uniform(0, 1)
     service_type = prng.choice(list(DMEventHandler.BITRATES.keys()), 1)[0]
-    buyer = (price_weight, service_type)
     # Calculate interarrival time
     delta_time = prng.exponential(1 / self._interarrival_rate)
     # Create next service request event
-    event = sim.Event(DMEventHandler.SR_EVENT, base_time + delta_time, buyer=buyer)
+    event = sim.Event(DMEventHandler.SR_EVENT, base_time + delta_time, bundle=(price_weight, service_type))
     # Schedule the event
     self._simulation_engine.schedule(event)
   
-  def _schedule_st_event(self, base_time, bidder):
+  def _schedule_st_event(self, base_time, bundle):
     """
     Schedules next service request termination event
     """
     # Create next service termination event
-    event = sim.Event(DMEventHandler.ST_EVENT, base_time + self._duration, bidder=bidder)
+    event = sim.Event(DMEventHandler.ST_EVENT, base_time + self._duration, bundle=bundle)
     # Schedule the event
     self._simulation_engine.schedule(event)
   
@@ -368,7 +367,7 @@ class DMEventHandler(sim.EventHandler):
     # Increment service request counter
     self._sr_count += 1
     # Get requested price weight and service type
-    w, service_type = event.kwargs.get('buyer', None)
+    w, service_type = event.kwargs.get('bundle', None)
     # Get bids from bidders
     bids = [self._bidders[0].submit_bid(service_type, w, self._bidders[1].reputation)]
     bids += [self._bidders[1].submit_bid(service_type, w, self._bidders[0].reputation)]
