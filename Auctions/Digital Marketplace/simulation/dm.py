@@ -337,11 +337,12 @@ class DMEventHandler(sim.EventHandler):
     """
     return self._buyers
   
-  def add_buyer(self, buyer):
+  @buyers.setter
+  def buyers(self, buyers):
     """
-    Adds Buyer instance
+    Adds Buyer instances
     """
-    self._buyers += [buyer]
+    self._buyers = buyers
   
   @property
   def bidders(self):
@@ -350,11 +351,12 @@ class DMEventHandler(sim.EventHandler):
     """
     return self._bidders
   
-  def add_bidder(self, bidder):
+  @bidders.setter
+  def bidders(self, bidders):
     """
-    Adds Bidder instance
+    Adds Bidder instances
     """
-    self._bidders += [bidder]
+    self._bidders = bidders
   
   @property
   def interarrival_rate(self):
