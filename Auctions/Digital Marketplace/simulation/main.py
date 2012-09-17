@@ -19,18 +19,10 @@ warnings.simplefilter("ignore", RuntimeWarning)
 
 
 def main():
-  ### Initialize
-  # Create new simulation engine
-  se = sim.SimulationEngine()
-  # Use NumPy PRNG with custom seed
-  prng = np.random.RandomState(1000)
-  se.prng = prng
-  
   ### Create simulation-specific scenario
-  # Create Buyers
-  buyers = [dm.Buyer(0.5, dm.Buyer.WEB_BROWSING)]
   # Create Bidders
-  bidders = [dm.Bidder(10000, {dm.Buyer.WEB_BROWSING: 0.5}), dm.Bidder(10000, {dm.Buyer.WEB_BROWSING: 0.5})]
+  bidders = [dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5}),
+             dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5})]
   # Set commitment for both bidders
   for b in bidders:
     b.commitment = 0.5
@@ -38,10 +30,16 @@ def main():
   interarrival_rate = 1
   # Service requests constant duration (in seconds)
   duration = 2.5 * 60
+  
+  ### Initialize
+  # Create new simulation engine
+  se = sim.SimulationEngine()
+  # Use NumPy PRNG with custom seed
+  prng = np.random.RandomState(1000)
+  se.prng = prng
   # Create simulation specific event handler
   event_handler = dm.DMEventHandler()
-  # Add buyers and bidders to simulation engine
-  event_handler.buyers = buyers
+  # Add bidders to simulation engine
   event_handler.bidders = bidders
   # Set params
   event_handler.interarrival_rate = interarrival_rate

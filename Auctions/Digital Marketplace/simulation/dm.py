@@ -55,78 +55,6 @@ class NumericalToolbox:
     return bids, graph_vf
   
 
-class Buyer:
-  """
-  Represents buyer in the Digital Marketplace; hence
-  either end-user or service provider
-  """
-  # ID counter
-  ID_COUNTER = 0
-  # Modeled services and capacity requirements
-  WEB_BROWSING = 1
-  EMAIL = 2
-  CAPACITY = {WEB_BROWSING: 512, EMAIL: 256}
-  
-  def __init__(self, price_weight, service):
-    """
-    Constructs Buyer instance
-    
-    Keyword arguments:
-    price_weight -- Price weight requested by this buyer
-    service -- Service requested by this buyer
-    """
-    # Assign ID for this instance
-    self._id = Buyer.ID_COUNTER
-    # Increment ID counter
-    Buyer.ID_COUNTER += 1
-    # Initialize prices paid dict to empty (key=service request number)
-    self._prices = {}
-    # Assign price weight preference of the buyer
-    self._price_weight = price_weight
-    # Assign requested service
-    self._service = service
-  
-  def __str__(self):
-    return "Buyer_" + str(self._id)
-  
-  @property
-  def id(self):
-    """
-    Returns unique ID of the object
-    """
-    return self._id
-  
-  @property
-  def prices(self):
-    """
-    Returns prices paid array
-    """
-    return self._prices
-  
-  def add_price(self, sr_number, price):
-    """
-    Adds price to the prices paid array
-    
-    Keyword arguments:
-    price -- Price to be added
-    """
-    self._prices[sr_number] = price
-  
-  @property
-  def price_weight(self):
-    """
-    Returns requested price weight of this buyer
-    """
-    return self._price_weight
-  
-  @property
-  def service(self):
-    """
-    Returns service requested by this buyer
-    """
-    return self._service
-  
-
 class Bidder:
   """
   Represents bidder in the Digital Marketplace; hence
@@ -313,14 +241,20 @@ class DMEventHandler(sim.EventHandler):
   """
   Digital Marketplace specific event handler
   """
+  # Event types
+  SR_EVENT = "service_request"
+  ST_EVENT = "service_termination"
+  # Modeled services and bit-rate requirements
+  WEB_BROWSING = 1
+  EMAIL = 2
+  BITRATES = {WEB_BROWSING: 512, EMAIL: 256}
+  
   def __init__(self):
     """
     Constructs DMEventHandler instance
     """
     super().__init__()
     ### Simulation building blocks and params
-    # Initialize buyers
-    self._buyers = []
     # Initialize list of bidders
     self._bidders = []
     # Initialize service requests mean interarrival rate
@@ -329,20 +263,6 @@ class DMEventHandler(sim.EventHandler):
     self._duration = 0
     # Initialize service request counter
     self._sr_count = 0
-  
-  @property
-  def buyers(self):
-    """
-    Returns list of buyers
-    """
-    return self._buyers
-  
-  @buyers.setter
-  def buyers(self, buyers):
-    """
-    Adds Buyer instances
-    """
-    self._buyers = buyers
   
   @property
   def bidders(self):
@@ -375,14 +295,14 @@ class DMEventHandler(sim.EventHandler):
   @property
   def duration(self):
     """
-    Returns service requests mean duration
+    Returns service requests duration
     """
     return self._duration
   
   @duration.setter
   def duration(self, duration):
     """
-    Sets service requests mean duration
+    Sets service requests duration
     """
     self._duration = duration
   
@@ -403,16 +323,15 @@ class DMEventHandler(sim.EventHandler):
     """
     Overriden
     """
-    if event.identifier in self._buyers:
+    if event.identifier == DMEventHandler.SR_EVENT:
       # Run auction
       self._run_auction(event)
       # Schedule next service request event
       self._schedule_sr_event(event.time)
-    elif event.identifier in self._bidders:
+    elif event.identifier == DMEventHandler.ST_EVENT:
       # A bidder finished handling request
-      bidder = event.identifier
-      buyer = event.kwargs.get('buyer', None)
-      bidder.finish_servicing_request(Buyer.CAPACITY[buyer.service])
+      bidder, service_type = event.kwargs.get('bidder', None)
+      bidder.finish_servicing_request(DMEventHandler.BITRATES[service_type])
     else:
       # End of simulation event
       pass
@@ -422,21 +341,23 @@ class DMEventHandler(sim.EventHandler):
     Schedules next service request event
     """
     prng = self._simulation_engine.prng
-    # Randomize through buyer types
-    buyer = prng.randint(len(self._buyers))
+    # Generate buyer (service type & price weight pair)
+    price_weight = prng.uniform(0, 1)
+    service_type = prng.choice(list(DMEventHandler.BITRATES.keys()), 1)[0]
+    buyer = (price_weight, service_type)
     # Calculate interarrival time
     delta_time = prng.exponential(1 / self._interarrival_rate)
     # Create next service request event
-    event = sim.Event(self._buyers[buyer], base_time + delta_time)
+    event = sim.Event(DMEventHandler.SR_EVENT, base_time + delta_time, buyer=buyer)
     # Schedule the event
     self._simulation_engine.schedule(event)
   
-  def _schedule_st_event(self, event_type, base_time, buyer):
+  def _schedule_st_event(self, base_time, bidder):
     """
     Schedules next service request termination event
     """
     # Create next service termination event
-    event = sim.Event(event_type, base_time + self._duration, buyer=buyer)
+    event = sim.Event(DMEventHandler.ST_EVENT, base_time + self._duration, bidder=bidder)
     # Schedule the event
     self._simulation_engine.schedule(event)
   
@@ -446,12 +367,11 @@ class DMEventHandler(sim.EventHandler):
     """
     # Increment service request counter
     self._sr_count += 1
-    # Get price weight of current bidder type
-    buyer = event.identifier
-    w = buyer.price_weight
+    # Get requested price weight and service type
+    w, service_type = event.kwargs.get('buyer', None)
     # Get bids from bidders
-    bids = [self._bidders[0].submit_bid(buyer.service, w, self._bidders[1].reputation)]
-    bids += [self._bidders[1].submit_bid(buyer.service, w, self._bidders[0].reputation)]
+    bids = [self._bidders[0].submit_bid(service_type, w, self._bidders[1].reputation)]
+    bids += [self._bidders[1].submit_bid(service_type, w, self._bidders[0].reputation)]
     # Elect the winner
     compound_bids = [w*bids[i] + (1-w)*self._bidders[i].reputation for i in range(2)]
     winner = 0
@@ -465,10 +385,10 @@ class DMEventHandler(sim.EventHandler):
       # Tie
       winner = self._simulation_engine.prng.randint(2)
     # Update system state
-    buyer.add_price(self._sr_count, bids[winner])
-    self._bidders[winner].service_request(self._sr_count, Buyer.CAPACITY[buyer.service])
+    winner = self._bidders[winner]
+    winner.service_request(self._sr_count, DMEventHandler.BITRATES[service_type])
     # Schedule termination event
-    self._schedule_st_event(self._bidders[winner], event.time, buyer)
+    self._schedule_st_event(event.time, (winner, service_type))
   
   def _save_results(self):
     """
@@ -481,9 +401,6 @@ class DMEventHandler(sim.EventHandler):
     for bidder in self._bidders:
       stream += "\n{}\ncosts: {}\ncommitment: {}\n".format(bidder, bidder.costs, bidder.commitment)
     stream += bar
-    stream += "\nBuyers:\n"
-    for buyer in self._buyers:
-      stream += "\n{}\nprice_weight: {}\nservice: {}\n".format(buyer, buyer.price_weight, buyer.service)
     # Create output directory if doesn't exist already
     dir_name = "out"
     if not os.path.exists(dir_name):
@@ -497,14 +414,6 @@ class DMEventHandler(sim.EventHandler):
     # Plot prices paid
     plt.figure()
     cycler = cycle(styles["line"])
-    for buyer in self._buyers:
-      plt.plot(list(buyer.prices.keys()), list(buyer.prices.values()), next(cycler))
-    plt.xlabel("Service request")
-    plt.ylabel("Price")
-    plt.legend([b for b in self._buyers], loc="upper center",
-               bbox_to_anchor=(0.5, 1.1), fancybox=True, shadow=True)
-    plt.grid()
-    plt.savefig(dir_name + "/prices.pdf")
     # Plot reputation history
     plt.figure()
     cycler = cycle(styles["line"])
