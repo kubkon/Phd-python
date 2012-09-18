@@ -45,7 +45,7 @@ def main():
              dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5, dm.DMEventHandler.EMAIL: 0.45})]
   # Set commitment for both bidders
   for b in bidders:
-    b.commitment = 0.5
+    b.commitment = 10/11
   # Service requests mean interarrival rate (per second)
   interarrival_rate = 1
   # Service requests constant duration (in seconds)

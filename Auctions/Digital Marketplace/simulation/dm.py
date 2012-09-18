@@ -450,6 +450,10 @@ class DMEventHandler(sim.EventHandler):
                bbox_to_anchor=(0.5, 1.1), fancybox=True, shadow=True)
     plt.grid()
     plt.savefig(dir_name + "/profit_history.pdf")
+    plt.ylim([0, 10])
+    plt.savefig(dir_name + "/profit_history_ylim_0_10.pdf")
+    plt.ylim([0, 1])
+    plt.savefig(dir_name + "/profit_history_ylim_0_1.pdf")
   
 
 class BidderTests(unittest.TestCase):
