@@ -21,19 +21,22 @@ def main():
   
   ### Parse command line arguments
   parser = argparse.ArgumentParser(description="DM simulation toolkit")
-  parser.add_argument('--log', dest='log_level', default='INFO',
-                      help='set logging level (default: INFO)')
   parser.add_argument('sim_duration', metavar='simulation_duration',
                       type=int, help='simulation duration in seconds')
+  parser.add_argument('--log', dest='log_level', default='INFO',
+                      help='set logging level (default: INFO)')
+  parser.add_argument('--logfile', dest='log_file', default=None,
+                      help='set output log file (default: None)')
   args = parser.parse_args()
-  log_level = args.log_level
   sim_duration = args.sim_duration
+  log_level = args.log_level
+  log_file = args.log_file
   
   ### Logging
   numeric_level = getattr(logging, log_level.upper(), 'INFO')
   if not isinstance(numeric_level, int):
     raise ValueError("Invalid log level: {}".format(log_level))
-  logging.basicConfig(level=numeric_level)
+  logging.basicConfig(filename=log_file, level=numeric_level)
   logging.info("Simulation duration set to: {}".format(sim_duration))
   
   ### Create simulation-specific scenario

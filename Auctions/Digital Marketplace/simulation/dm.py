@@ -200,6 +200,7 @@ class Bidder:
       bid = (bids_hat[dist.index(min(dist))] - (1-price_weight)*self._reputation) / price_weight
     elif price_weight == 0.0:
       bid = "Inf"
+      logging.warning("Bid value equal to Inf")
     else:
       # Calculate bid
       bid = (1 + self._costs[service_type]) / 2
