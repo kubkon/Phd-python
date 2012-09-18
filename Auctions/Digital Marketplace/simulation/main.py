@@ -14,11 +14,11 @@ import warnings
 import sim
 import sys
 
-# Neglect NumPy overflow warnings
-warnings.simplefilter("ignore", RuntimeWarning)
-
 
 def main():
+  ### Neglect NumPy overflow warnings
+  warnings.simplefilter("ignore", RuntimeWarning)
+  
   ### Parse command line arguments
   parser = argparse.ArgumentParser(description="DM simulation toolkit")
   parser.add_argument('--log', dest='log_level', default='INFO',
