@@ -6,19 +6,36 @@ main.py
 Created by Jakub Konka on 2012-07-23.
 Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
-from __future__ import division
-import sys
-
+import argparse
 import dm
+import logging
 import numpy as np
 import warnings
 import sim
+import sys
 
 # Neglect NumPy overflow warnings
 warnings.simplefilter("ignore", RuntimeWarning)
 
 
 def main():
+  ### Parse command line arguments
+  parser = argparse.ArgumentParser(description="DM simulation toolkit")
+  parser.add_argument('--log', dest='log_level', default='INFO',
+                      help='set logging level (default: INFO)')
+  parser.add_argument('sim_duration', metavar='simulation_duration',
+                      type=int, help='simulation duration in seconds')
+  args = parser.parse_args()
+  log_level = args.log_level
+  sim_duration = args.sim_duration
+  
+  ### Logging
+  numeric_level = getattr(logging, log_level.upper(), 'INFO')
+  if not isinstance(numeric_level, int):
+    raise ValueError("Invalid log level: {}".format(log_level))
+  logging.basicConfig(level=numeric_level)
+  logging.info("Simulation duration set to: {}".format(sim_duration))
+  
   ### Create simulation-specific scenario
   # Create Bidders
   bidders = [dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5, dm.DMEventHandler.EMAIL: 0.45}),
@@ -46,16 +63,12 @@ def main():
   event_handler.duration = duration
   
   ### Simulate
-  # Read from args list desired simulation duration
-  try:
-    sim_duration = int(sys.argv[1])
-  except (ValueError, IndexError):
-    sim_duration = 3600
-  print("Simulation duration set to: {}".format(sim_duration))
   # Schedule finishing event
   se.stop(sim_duration)
   # Start simulating
+  logging.info("Simulation started")
   se.start()
+  logging.info("Simulation finished")
 
 
 if __name__ == '__main__':

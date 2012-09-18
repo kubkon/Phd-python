@@ -6,6 +6,7 @@ dm.py
 Created by Jakub Konka on 2012-08-22.
 Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -325,6 +326,7 @@ class DMEventHandler(sim.EventHandler):
     """
     Overriden
     """
+    logging.debug("Received event => {}".format(event.identifier))
     if event.identifier == DMEventHandler.SR_EVENT:
       # Run auction
       self._run_auction(event)
