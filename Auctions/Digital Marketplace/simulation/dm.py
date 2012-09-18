@@ -207,7 +207,7 @@ class Bidder:
     self._current_profit = bid - self._costs[service_type] if price_weight != 0.0 else "Inf"
     return bid
   
-  def service_request(self, sr_number, sr_capacity):
+  def service_request(self, sr_number, service_type):
     """
     Updates params as if serviced buyer's service request
     
@@ -218,6 +218,7 @@ class Bidder:
     # Save current profit in a profit history dict
     self._profit_history[sr_number] = self._current_profit
     # Update capacity and reputation
+    sr_capacity = DMEventHandler.BITRATES[service_type]
     if self._available_capacity >= sr_capacity:
       # Update available capacity
       self._available_capacity -= sr_capacity
@@ -228,14 +229,20 @@ class Bidder:
       self._available_capacity = 0
       # Update reputation
       self._update_reputation(False)
+    logging.debug("{} => reputation: {}".format(self, self._reputation))
+    logging.debug("{} => service type: {}".format(self, service_type))
+    logging.debug("{} => available bitrate: {}".format(self, self._available_capacity))
   
-  def finish_servicing_request(self, sr_capacity):
+  def finish_servicing_request(self, service_type):
     """
     Updates params when finishing servicing buyers service request
     """
     # Update available capacity
+    sr_capacity = DMEventHandler.BITRATES[service_type]
     cap_sum = self._available_capacity + sr_capacity
     self._available_capacity = cap_sum if cap_sum < self._total_capacity else self._total_capacity
+    logging.debug("{} => service type: {}".format(self, service_type))
+    logging.debug("{} => available bitrate: {}".format(self, self._available_capacity))
   
 
 class DMEventHandler(sim.EventHandler):
@@ -326,7 +333,7 @@ class DMEventHandler(sim.EventHandler):
     """
     Overriden
     """
-    logging.debug("Received event => {}".format(event.identifier))
+    logging.debug("{} @ Received event => {}".format(self._simulation_engine.simulation_time, event.identifier))
     if event.identifier == DMEventHandler.SR_EVENT:
       # Run auction
       self._run_auction(event)
@@ -335,7 +342,7 @@ class DMEventHandler(sim.EventHandler):
     elif event.identifier == DMEventHandler.ST_EVENT:
       # A bidder finished handling request
       bidder, service_type = event.kwargs.get('bundle', None)
-      bidder.finish_servicing_request(DMEventHandler.BITRATES[service_type])
+      bidder.finish_servicing_request(service_type)
     else:
       # End of simulation event
       pass
@@ -390,7 +397,7 @@ class DMEventHandler(sim.EventHandler):
     # Collect statistics & update system state
     self._prices += [bids[winner]]
     winner = self._bidders[winner]
-    winner.service_request(self._sr_count, DMEventHandler.BITRATES[service_type])
+    winner.service_request(self._sr_count, service_type)
     # Schedule termination event
     self._schedule_st_event(event.time, (winner, service_type))
   
