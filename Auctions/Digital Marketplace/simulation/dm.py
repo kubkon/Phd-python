@@ -437,6 +437,7 @@ class DMEventHandler(sim.EventHandler):
     plt.ylabel("Reputation")
     plt.legend([b for b in self._bidders], loc="upper center",
                bbox_to_anchor=(0.5, 1.1), fancybox=True, shadow=True)
+    plt.ylim([-0.1, 1.1])
     plt.grid()
     plt.savefig(dir_name + "/reputation_history.pdf")
     # Plot profit history for each bidder

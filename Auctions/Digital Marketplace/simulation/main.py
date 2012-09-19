@@ -13,6 +13,7 @@ import numpy as np
 import warnings
 import sim
 import sys
+import time
 
 
 def main():
@@ -23,12 +24,15 @@ def main():
   parser = argparse.ArgumentParser(description="DM simulation toolkit")
   parser.add_argument('sim_duration', metavar='simulation_duration',
                       type=int, help='simulation duration in seconds')
+  parser.add_argument('--seed', dest='seed', default=int(round(time.time())),
+                      type=int, help='seed for the PRNG')
   parser.add_argument('--log', dest='log_level', default='INFO',
                       help='set logging level (default: INFO)')
   parser.add_argument('--logfile', dest='log_file', default=None,
                       help='set output log file (default: None)')
   args = parser.parse_args()
   sim_duration = args.sim_duration
+  seed = args.seed
   log_level = args.log_level
   log_file = args.log_file
   
@@ -55,8 +59,9 @@ def main():
   # Create new simulation engine
   se = sim.SimulationEngine()
   # Use NumPy PRNG with custom seed
-  prng = np.random.RandomState(1000)
+  prng = np.random.RandomState(seed)
   se.prng = prng
+  logging.info("Seed value set to: {}".format(seed))
   # Create simulation specific event handler
   event_handler = dm.DMEventHandler()
   # Add bidders to simulation engine
