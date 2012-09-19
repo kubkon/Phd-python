@@ -47,9 +47,10 @@ def main():
   # Create Bidders
   bidders = [dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5, dm.DMEventHandler.EMAIL: 0.45}),
              dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5, dm.DMEventHandler.EMAIL: 0.45})]
-  # Set commitment for both bidders
+  # Set reputation rating increase and decrease step size for both bidders
   for b in bidders:
-    b.commitment = 10/11
+    b.rep_increase = 0.1
+    b.rep_decrease = 0.01
   # Service requests mean interarrival rate (per second)
   interarrival_rate = 1
   # Service requests constant duration (in seconds)

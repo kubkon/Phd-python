@@ -88,8 +88,10 @@ class Bidder:
     self._total_capacity = total_capacity
     # Initialize available capacity
     self._available_capacity = total_capacity
-    # Initialize commitment
-    self._commitment = 0.8
+    # Initialize reputation rating increase step size
+    self._rep_increase = 0.1
+    # Initialize reputation rating decrease step size
+    self._rep_decrease = 0.01
   
   def __str__(self):
     return "Bidder_" + str(self._id)
@@ -137,18 +139,32 @@ class Bidder:
     return self._available_capacity
   
   @property
-  def commitment(self):
+  def rep_increase(self):
     """
-    Returns commitment (ranging from 0.0 to 1.0)
+    Returns reputation rating increase step size
     """
-    return self._commitment
+    return self._rep_increase
   
-  @commitment.setter
-  def commitment(self, commitment):
+  @rep_increase.setter
+  def rep_increase(self, rep_increase):
     """
-    Sets commitment (can be from 0.0 to 1.0)
+    Sets reputation rating increase step size
     """
-    self._commitment = commitment
+    self._rep_increase = rep_increase
+  
+  @property
+  def rep_decrease(self):
+    """
+    Returns reputation rating decrease step size
+    """
+    return self._rep_decrease
+  
+  @rep_decrease.setter
+  def rep_decrease(self, rep_decrease):
+    """
+    Sets reputation rating decrease step size
+    """
+    self._rep_decrease = rep_decrease
   
   def _generate_cost(self, service_type):
     """
@@ -172,10 +188,9 @@ class Bidder:
     success_report -- Success report of current service request
     """
     if success_report:
-      self._reputation = self._reputation - 0.01 if self._reputation >= 0.01 else 0.0
+      self._reputation = self._reputation - self._rep_decrease if self._reputation >= self._rep_decrease else 0.0
     else:
-      param = self._commitment / (100 * (1 - self._commitment))
-      self._reputation = self._reputation + param if self._reputation + param <= 1.0 else 1.0
+      self._reputation = self._reputation + self._rep_increase if self._reputation + self._rep_increase <= 1.0 else 1.0
   
   def submit_bid(self, service_type, price_weight, enemy_reputation):
     """
@@ -410,7 +425,10 @@ class DMEventHandler(sim.EventHandler):
     # Prepare output stream
     stream = "Bidders:\n"
     for bidder in self._bidders:
-      stream += "\n{}\ncosts: {}\ncommitment: {}\n".format(bidder, bidder.costs, bidder.commitment)
+      stream += "\n{}\ncosts: {}\n" \
+                "reputation rating increase rate: {}\n" \
+                "reputation rating decrease rate: {}\n" \
+                .format(bidder, bidder.costs, bidder.rep_increase, bidder.rep_decrease)
     # Create output directory if doesn't exist already
     dir_name = "out"
     if not os.path.exists(dir_name):
