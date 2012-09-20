@@ -82,16 +82,18 @@ class Bidder:
     self._reputation = 0.5
     # Initialize reputation history list
     self._reputation_history = []
+    # Initialize reputation rating increase step size
+    self._rep_increase = 0.1
+    # Initialize reputation rating decrease step size
+    self._rep_decrease = 0.01
     # Initialize profit history dict (key: auction number)
     self._profit_history = {}
     # Assign total capacity available to the bidder
     self._total_capacity = total_capacity
     # Initialize available capacity
     self._available_capacity = total_capacity
-    # Initialize reputation rating increase step size
-    self._rep_increase = 0.1
-    # Initialize reputation rating decrease step size
-    self._rep_decrease = 0.01
+    # Initialize user success report list
+    self._success_list = []
   
   def __str__(self):
     return "Bidder_" + str(self._id)
@@ -165,6 +167,13 @@ class Bidder:
     Sets reputation rating decrease step size
     """
     self._rep_decrease = rep_decrease
+  
+  @property
+  def success_list(self):
+    """
+    Returns user success list for this bidder
+    """
+    return self._success_list
   
   def _generate_cost(self, service_type):
     """
@@ -245,9 +254,11 @@ class Bidder:
       self._available_capacity = 0
       # Update reputation
       self._update_reputation(False)
+    self._success_list += [True] if self._available_capacity >= sr_capacity else [False]
     logging.debug("{} => reputation: {}".format(self, self._reputation))
     logging.debug("{} => service type: {}".format(self, service_type))
     logging.debug("{} => available bitrate: {}".format(self, self._available_capacity))
+    logging.debug("{} => user success report list: {}".format(self, self._success_list))
   
   def finish_servicing_request(self, service_type):
     """
