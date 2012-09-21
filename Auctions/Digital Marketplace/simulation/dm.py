@@ -159,20 +159,6 @@ class Bidder:
       # Generate new cost for service type
       self._costs[service_type] = se.prng.uniform(0,1)
   
-  def _update_reputation(self, success_report):
-    """
-    Updates reputation according to commitment and success report
-    
-    Keyword arguments:
-    success_report -- Success report of current service request
-    """
-    if success_report:
-      rep_decrease = Bidder.rep_update_params[1]
-      self._reputation = self._reputation - rep_decrease if self._reputation >= rep_decrease else 0.0
-    else:
-      rep_increase = Bidder.rep_update_params[0]
-      self._reputation = self._reputation + rep_increase if self._reputation + rep_increase <= 1.0 else 1.0
-  
   def submit_bid(self, service_type, price_weight, enemy_reputation):
     """
     Returns bid of the bidder for the specified params
@@ -214,22 +200,29 @@ class Bidder:
     """
     # Save current profit in a profit history dict
     self._profit_history[sr_number] = self._current_profit
-    # Update capacity and reputation
-    sr_capacity = DMEventHandler.BITRATES[service_type]
-    # Flush the user success report list based on the reputation rating update depth param
+    # Update capacity & reputation
+    diff_capacity = self._available_capacity - DMEventHandler.BITRATES[service_type]
+    # Update available capacity and store user success report
+    if diff_capacity >= 0:
+      self._available_capacity = diff_capacity
+      self._success_list += [1]
+    else:
+      self._available_capacity = 0
+      self._success_list += [0]
+    logging.debug("{} => user success report list: {}".format(self, self._success_list))
+    logging.debug("{} => latest user success report: {}".format(self, self._success_list[-1]))
+    # Compute reputation rating update and flush the user success report list
     if len(self._success_list) == Bidder.rep_update_params[2]:
+      if sum(self._success_list) / len(self._success_list) >= Bidder.rep_update_params[3]:
+        rep_decrease = Bidder.rep_update_params[1]
+        self._reputation = self._reputation - rep_decrease if self._reputation >= rep_decrease else 0.0
+      else:
+        rep_increase = Bidder.rep_update_params[0]
+        self._reputation = self._reputation + rep_increase if self._reputation + rep_increase <= 1.0 else 1.0
       self._success_list = []
-    # Save user success report based on the available capacity vs the required one condition
-    self._success_list += [True] if self._available_capacity >= sr_capacity else [False]
-    # Update available capacity
-    self._available_capacity = self._available_capacity - sr_capacity if self._available_capacity >= sr_capacity else 0
-    # Update reputation rating
-    self._update_reputation(self._success_list[-1])
     logging.debug("{} => reputation: {}".format(self, self._reputation))
     logging.debug("{} => service type: {}".format(self, service_type))
     logging.debug("{} => available bitrate: {}".format(self, self._available_capacity))
-    logging.debug("{} => user success report list: {}".format(self, self._success_list))
-    logging.debug("{} => latest user success report: {}".format(self, self._success_list[-1]))
   
   def finish_servicing_request(self, service_type):
     """
