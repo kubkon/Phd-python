@@ -82,10 +82,8 @@ class Bidder:
     self._reputation = 0.5
     # Initialize reputation history list
     self._reputation_history = []
-    # Initialize reputation rating increase step size
-    self._rep_increase = 0.1
-    # Initialize reputation rating decrease step size
-    self._rep_decrease = 0.01
+    # Initialize reputation rating update params
+    self._rep_update_params = (0.01, 0.01, 1, 1)
     # Initialize profit history dict (key: auction number)
     self._profit_history = {}
     # Assign total capacity available to the bidder
@@ -120,6 +118,23 @@ class Bidder:
     return self._reputation
   
   @property
+  def rep_update_params(self):
+    """
+    Returns tuple of reputation rating update params
+    """
+    return self._rep_update_params
+  
+  @rep_update_params.setter
+  def rep_update_params(self, rep_update_params):
+    """
+    Sets reputation rating update params
+    
+    Keyword arguments:
+    rep_update_params -- Params tuple
+    """
+    self._rep_update_params = rep_update_params
+  
+  @property
   def reputation_history(self):
     """
     Returns reputation history of the bidder
@@ -139,34 +154,6 @@ class Bidder:
     Returns available capacity
     """
     return self._available_capacity
-  
-  @property
-  def rep_increase(self):
-    """
-    Returns reputation rating increase step size
-    """
-    return self._rep_increase
-  
-  @rep_increase.setter
-  def rep_increase(self, rep_increase):
-    """
-    Sets reputation rating increase step size
-    """
-    self._rep_increase = rep_increase
-  
-  @property
-  def rep_decrease(self):
-    """
-    Returns reputation rating decrease step size
-    """
-    return self._rep_decrease
-  
-  @rep_decrease.setter
-  def rep_decrease(self, rep_decrease):
-    """
-    Sets reputation rating decrease step size
-    """
-    self._rep_decrease = rep_decrease
   
   @property
   def success_list(self):
@@ -197,9 +184,11 @@ class Bidder:
     success_report -- Success report of current service request
     """
     if success_report:
-      self._reputation = self._reputation - self._rep_decrease if self._reputation >= self._rep_decrease else 0.0
+      rep_decrease = self._rep_update_params[1]
+      self._reputation = self._reputation - rep_decrease if self._reputation >= rep_decrease else 0.0
     else:
-      self._reputation = self._reputation + self._rep_increase if self._reputation + self._rep_increase <= 1.0 else 1.0
+      rep_increase = self._rep_update_params[0]
+      self._reputation = self._reputation + rep_increase if self._reputation + rep_increase <= 1.0 else 1.0
   
   def submit_bid(self, service_type, price_weight, enemy_reputation):
     """
@@ -244,21 +233,20 @@ class Bidder:
     self._profit_history[sr_number] = self._current_profit
     # Update capacity and reputation
     sr_capacity = DMEventHandler.BITRATES[service_type]
-    if self._available_capacity >= sr_capacity:
-      # Update available capacity
-      self._available_capacity -= sr_capacity
-      # Update reputation
-      self._update_reputation(True)
-    else:
-      # Update available capacity
-      self._available_capacity = 0
-      # Update reputation
-      self._update_reputation(False)
+    # Flush the user success report list based on the reputation rating update depth param
+    if len(self._success_list) == self._rep_update_params[2]:
+      self._success_list = []
+    # Save user success report based on the available capacity vs the required one condition
     self._success_list += [True] if self._available_capacity >= sr_capacity else [False]
+    # Update available capacity
+    self._available_capacity = self._available_capacity - sr_capacity if self._available_capacity >= sr_capacity else 0
+    # Update reputation rating
+    self._update_reputation(self._success_list[-1])
     logging.debug("{} => reputation: {}".format(self, self._reputation))
     logging.debug("{} => service type: {}".format(self, service_type))
     logging.debug("{} => available bitrate: {}".format(self, self._available_capacity))
     logging.debug("{} => user success report list: {}".format(self, self._success_list))
+    logging.debug("{} => latest user success report: {}".format(self, self._success_list[-1]))
   
   def finish_servicing_request(self, service_type):
     """
@@ -436,10 +424,13 @@ class DMEventHandler(sim.EventHandler):
     # Prepare output stream
     stream = "Bidders:\n"
     for bidder in self._bidders:
+      rep_params = bidder.rep_update_params
       stream += "\n{}\ncosts: {}\n" \
                 "reputation rating increase rate: {}\n" \
-                "reputation rating decrease rate: {}\n" \
-                .format(bidder, bidder.costs, bidder.rep_increase, bidder.rep_decrease)
+                " decrease rate: {}\n" \
+                " update depth: {}\n" \
+                " percentage: {}\n" \
+                .format(bidder, bidder.costs, rep_params[0], rep_params[1], rep_params[2], rep_params[3])
     # Create output directory if doesn't exist already
     dir_name = "out"
     if not os.path.exists(dir_name):
