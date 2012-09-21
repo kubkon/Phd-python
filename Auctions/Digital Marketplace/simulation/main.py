@@ -47,10 +47,9 @@ def main():
   # Create Bidders
   bidders = [dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5, dm.DMEventHandler.EMAIL: 0.45}),
              dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5, dm.DMEventHandler.EMAIL: 0.45})]
-  # Set reputation rating params
-  for b in bidders:
-    # Increase, decrease, depth, and percentage
-    b.rep_update_params = (0.05, 0.01, 1, 1)
+  # Set reputation rating params:
+  # increase, decrease, depth, and percentage
+  dm.Bidder.rep_update_params = (0.05, 0.01, 2, 1)
   # Service requests mean interarrival rate (per second)
   interarrival_rate = 1
   # Service requests constant duration (in seconds)

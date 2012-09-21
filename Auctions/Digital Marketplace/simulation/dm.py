@@ -62,7 +62,9 @@ class Bidder:
   a network operator
   """
   # ID counter
-  ID_COUNTER = 0
+  _id_counter = 0
+  # Default reputation update params
+  rep_update_params = (0.01, 0.01, 1, 1)
   
   def __init__(self, total_capacity, costs=None):
     """
@@ -73,17 +75,15 @@ class Bidder:
     costs -- (Optional) costs per service type
     """
     # Create ID for this instance
-    self._id = Bidder.ID_COUNTER
+    self._id = Bidder._id_counter
     # Increment ID counter
-    Bidder.ID_COUNTER += 1
+    Bidder._id_counter += 1
     # Initialize costs dict (cost per service type)
     self._costs = {} if costs is None else costs
     # Initialize reputation to default value
     self._reputation = 0.5
     # Initialize reputation history list
     self._reputation_history = []
-    # Initialize reputation rating update params
-    self._rep_update_params = (0.01, 0.01, 1, 1)
     # Initialize profit history dict (key: auction number)
     self._profit_history = {}
     # Assign total capacity available to the bidder
@@ -116,23 +116,6 @@ class Bidder:
     Returns current reputation of the bidder
     """
     return self._reputation
-  
-  @property
-  def rep_update_params(self):
-    """
-    Returns tuple of reputation rating update params
-    """
-    return self._rep_update_params
-  
-  @rep_update_params.setter
-  def rep_update_params(self, rep_update_params):
-    """
-    Sets reputation rating update params
-    
-    Keyword arguments:
-    rep_update_params -- Params tuple
-    """
-    self._rep_update_params = rep_update_params
   
   @property
   def reputation_history(self):
@@ -184,10 +167,10 @@ class Bidder:
     success_report -- Success report of current service request
     """
     if success_report:
-      rep_decrease = self._rep_update_params[1]
+      rep_decrease = Bidder.rep_update_params[1]
       self._reputation = self._reputation - rep_decrease if self._reputation >= rep_decrease else 0.0
     else:
-      rep_increase = self._rep_update_params[0]
+      rep_increase = Bidder.rep_update_params[0]
       self._reputation = self._reputation + rep_increase if self._reputation + rep_increase <= 1.0 else 1.0
   
   def submit_bid(self, service_type, price_weight, enemy_reputation):
@@ -234,7 +217,7 @@ class Bidder:
     # Update capacity and reputation
     sr_capacity = DMEventHandler.BITRATES[service_type]
     # Flush the user success report list based on the reputation rating update depth param
-    if len(self._success_list) == self._rep_update_params[2]:
+    if len(self._success_list) == Bidder.rep_update_params[2]:
       self._success_list = []
     # Save user success report based on the available capacity vs the required one condition
     self._success_list += [True] if self._available_capacity >= sr_capacity else [False]
@@ -424,7 +407,7 @@ class DMEventHandler(sim.EventHandler):
     # Prepare output stream
     stream = "Bidders:\n"
     for bidder in self._bidders:
-      rep_params = bidder.rep_update_params
+      rep_params = Bidder.rep_update_params
       stream += "\n{}\ncosts: {}\n" \
                 "reputation rating increase rate: {}\n" \
                 " decrease rate: {}\n" \
