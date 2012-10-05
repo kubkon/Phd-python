@@ -24,8 +24,10 @@ def main():
   parser = argparse.ArgumentParser(description="DM simulation toolkit")
   parser.add_argument('sim_duration', metavar='simulation_duration',
                       type=int, help='simulation duration in seconds')
+  parser.add_argument('repetitions', metavar='number_repetitions',
+                      type=int, help='number of repetitions')
   parser.add_argument('--seed', dest='seed', default=int(round(time.time())),
-                      type=int, help='seed for the PRNG')
+                      type=int, help='seed for the PRNG (default: current system timestamp)')
   parser.add_argument('--log', dest='log_level', default='INFO',
                       help='set logging level (default: INFO)')
   parser.add_argument('--logfile', dest='log_file', default=None,
