@@ -412,60 +412,24 @@ class DMEventHandler(sim.EventHandler):
     """
     Saves results of the simulation
     """
-    ### Params
-    # Prepare output stream
-    stream = "Bidders:\n"
-    for bidder in self._bidders:
-      rep_params = Bidder.rep_update_params
-      stream += "\n{}\ncosts: {}\n" \
-                "reputation rating increase rate: {}\n" \
-                " decrease rate: {}\n" \
-                " update depth: {}\n" \
-                " percentage: {}\n" \
-                .format(bidder, bidder.costs, rep_params[0], rep_params[1], rep_params[2], rep_params[3])
     # Create output directory if doesn't exist already
     if not os.path.exists(self._save_dir):
       os.makedirs(self._save_dir)
-    # Write stream to a file
-    with open(self._save_dir + '/params.log', mode='w', encoding='utf-8') as a_file:
-      a_file.write(stream)
-    ### Figures
-    # Create line and marker style lists
-    styles = {"line": ["-", "--", "-.", ":"], "marker": [".", "*", "v", "^", "<", ">", "1", "2", "3", "4", "p", "s", "x", "h"]}
-    # Plot prices paid
-    plt.figure()
-    plt.plot(range(1, self._sr_count + 1), self._prices, '.')
-    plt.xlabel("Service request")
-    plt.ylabel("Price (per unit service)")
-    plt.grid()
-    plt.savefig(self._save_dir + "/prices.pdf")
-    # Plot reputation history
-    plt.figure()
-    cycler = cycle(styles["line"])
+    # Write output data to files
+    # 1. Service request number vs prices paid
+    with open(self._save_dir + '/prices.out', mode='w', encoding='utf-8') as f_prices:
+      for (x, y) in zip(range(1, self._sr_count + 1), self._prices):
+        f_prices.write("{},{}\n".format(x, y))
+    # 2. Service request number vs reputation history
     for b in self._bidders:
-      plt.plot(range(1, self._sr_count + 1), b.reputation_history, next(cycler))
-    plt.xlabel("Service request")
-    plt.ylabel("Reputation")
-    plt.legend([b for b in self._bidders], loc="upper center",
-               bbox_to_anchor=(0.5, 1.1), fancybox=True, shadow=True)
-    plt.ylim([-0.1, 1.1])
-    plt.grid()
-    plt.savefig(self._save_dir + "/reputation_history.pdf")
-    # Plot profit history for each bidder
-    plt.figure()
-    cycler = cycle(styles["marker"])
+      with open("{}/reputation_{}.out".format(self._save_dir, str(b).lower()), mode='w', encoding='utf-8') as f_reps:
+        for (x, y) in zip(range(1, self._sr_count + 1), b.reputation_history):
+          f_reps.write("{},{}\n".format(x, y))
+    # 3. Profit history
     for b in self._bidders:
-      plt.plot(list(b.profit_history.keys()), list(b.profit_history.values()), next(cycler))
-    plt.xlabel("Service request")
-    plt.ylabel("Profit (per unit service)")
-    plt.legend([b for b in self._bidders], loc="upper center",
-               bbox_to_anchor=(0.5, 1.1), fancybox=True, shadow=True)
-    plt.grid()
-    plt.savefig(self._save_dir + "/profit_history.pdf")
-    plt.ylim([0, 10])
-    plt.savefig(self._save_dir + "/profit_history_ylim_0_10.pdf")
-    plt.ylim([0, 1])
-    plt.savefig(self._save_dir + "/profit_history_ylim_0_1.pdf")
+      with open("{}/profit_{}.out".format(self._save_dir, str(b).lower()), mode='w', encoding='utf-8') as f_profits:
+        for (x, y) in zip(b.profit_history.keys(), b.profit_history.values()):
+          f_profits.write("{},{}\n".format(x, y))
   
 
 class BidderTests(unittest.TestCase):

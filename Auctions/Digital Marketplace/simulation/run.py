@@ -8,6 +8,7 @@ Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
 import argparse
 import subprocess as sub
+import time
 
 def main():
   ### Parse command line arguments
@@ -51,4 +52,7 @@ def main():
 
 
 if __name__ == '__main__':
+  print("Init time: {}".format(time.time()))
   main()
+  print("End time: {}".format(time.time()))
+  
