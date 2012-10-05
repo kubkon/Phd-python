@@ -260,6 +260,8 @@ class DMEventHandler(sim.EventHandler):
     self._interarrival_rate = 0
     # Initialize service requests duration
     self._duration = 0
+    # Initialize save directory
+    self._save_dir = ""
     # Initialize service request counter
     self._sr_count = 0
     # Initialize prices history list
@@ -306,6 +308,20 @@ class DMEventHandler(sim.EventHandler):
     Sets service requests duration
     """
     self._duration = duration
+  
+  @property
+  def save_dir(self):
+    """
+    Returns save directory
+    """
+    return self._save_dir
+  
+  @save_dir.setter
+  def save_dir(self, save_dir):
+    """
+    Sets save directory
+    """
+    self._save_dir = save_dir
   
   def _handle_start(self):
     """
@@ -408,11 +424,10 @@ class DMEventHandler(sim.EventHandler):
                 " percentage: {}\n" \
                 .format(bidder, bidder.costs, rep_params[0], rep_params[1], rep_params[2], rep_params[3])
     # Create output directory if doesn't exist already
-    dir_name = "out"
-    if not os.path.exists(dir_name):
-      os.makedirs(dir_name)
+    if not os.path.exists(self._save_dir):
+      os.makedirs(self._save_dir)
     # Write stream to a file
-    with open(dir_name + '/params.log', mode='w', encoding='utf-8') as a_file:
+    with open(self._save_dir + '/params.log', mode='w', encoding='utf-8') as a_file:
       a_file.write(stream)
     ### Figures
     # Create line and marker style lists
@@ -423,7 +438,7 @@ class DMEventHandler(sim.EventHandler):
     plt.xlabel("Service request")
     plt.ylabel("Price (per unit service)")
     plt.grid()
-    plt.savefig(dir_name + "/prices.pdf")
+    plt.savefig(self._save_dir + "/prices.pdf")
     # Plot reputation history
     plt.figure()
     cycler = cycle(styles["line"])
@@ -435,7 +450,7 @@ class DMEventHandler(sim.EventHandler):
                bbox_to_anchor=(0.5, 1.1), fancybox=True, shadow=True)
     plt.ylim([-0.1, 1.1])
     plt.grid()
-    plt.savefig(dir_name + "/reputation_history.pdf")
+    plt.savefig(self._save_dir + "/reputation_history.pdf")
     # Plot profit history for each bidder
     plt.figure()
     cycler = cycle(styles["marker"])
@@ -446,11 +461,11 @@ class DMEventHandler(sim.EventHandler):
     plt.legend([b for b in self._bidders], loc="upper center",
                bbox_to_anchor=(0.5, 1.1), fancybox=True, shadow=True)
     plt.grid()
-    plt.savefig(dir_name + "/profit_history.pdf")
+    plt.savefig(self._save_dir + "/profit_history.pdf")
     plt.ylim([0, 10])
-    plt.savefig(dir_name + "/profit_history_ylim_0_10.pdf")
+    plt.savefig(self._save_dir + "/profit_history_ylim_0_10.pdf")
     plt.ylim([0, 1])
-    plt.savefig(dir_name + "/profit_history_ylim_0_1.pdf")
+    plt.savefig(self._save_dir + "/profit_history_ylim_0_1.pdf")
   
 
 class BidderTests(unittest.TestCase):

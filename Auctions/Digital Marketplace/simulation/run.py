@@ -21,13 +21,19 @@ def main():
   sim_duration = args.sim_duration
   
   ### Run simulations
-  script = "main.py"
-  arguments = "{}".format(sim_duration)
-  for n in range(repetitions):
-    try:
-      sub.call("python " + script + " " + arguments, shell=True)
-    except OSError:
-      print("Execution failed: ", OSError)
+  # Split num of repetitions into batches of 4
+  batch_size = 4
+  quotient = repetitions // batch_size
+  remainder = repetitions % batch_size
+  # Run the simulations (4 in parallel as subprocesses)
+  for n in range(1, quotient+2):
+    num_proc = batch_size if n * batch_size <= repetitions else remainder
+    for m in range(num_proc):
+      try:
+        seed = m + batch_size * (n-1)
+        sub.Popen("python main.py {} --seed={} --id={}".format(sim_duration, seed, seed), shell=True)
+      except OSError as e:
+        print("Execution failed: ", e)
 
 
 if __name__ == '__main__':

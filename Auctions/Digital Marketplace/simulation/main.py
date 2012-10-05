@@ -24,6 +24,8 @@ def main():
   parser = argparse.ArgumentParser(description="DM simulation toolkit")
   parser.add_argument('sim_duration', metavar='simulation_duration',
                       type=int, help='simulation duration in seconds')
+  parser.add_argument('--id', dest='id', default=0,
+                      type=int, help='simulation run id (default: 0)')
   parser.add_argument('--seed', dest='seed', default=int(round(time.time())),
                       type=int, help='seed for the PRNG (default: current system timestamp)')
   parser.add_argument('--log', dest='log_level', default='INFO',
@@ -32,6 +34,7 @@ def main():
                       help='set output log file (default: None)')
   args = parser.parse_args()
   sim_duration = args.sim_duration
+  sim_id = args.id
   seed = args.seed
   log_level = args.log_level
   log_file = args.log_file
@@ -69,6 +72,7 @@ def main():
   # Set params
   event_handler.interarrival_rate = interarrival_rate
   event_handler.duration = duration
+  event_handler.save_dir = "out/" + str(sim_id)
   
   ### Simulate
   # Schedule finishing event
