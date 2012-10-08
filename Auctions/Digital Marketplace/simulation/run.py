@@ -8,7 +8,6 @@ Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
 import argparse
 import subprocess as sub
-import time
 
 def main():
   ### Parse command line arguments
@@ -49,10 +48,12 @@ def main():
             sub.Popen("python main.py {} --seed={} --id={}".format(sim_duration, seed, seed), shell=True).wait()
         except OSError as e:
           print("Execution failed: ", e)
+  
+  ### Merge results from files
+  # Get files (as strings)
+  file_paths = [os.path.join(root, f) for root, _, files in os.walk("out") for f in files if f.endswith(".out")]
 
 
 if __name__ == '__main__':
-  print("Init time: {}".format(time.time()))
   main()
-  print("End time: {}".format(time.time()))
   
