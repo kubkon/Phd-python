@@ -26,30 +26,32 @@ def main():
   batch_size = args.batch_size
   
   ### Run simulations
-  # One process at a time
-  if batch_size == 1:
-    for n in range(repetitions):
-      try:
+  try:
+    # One process at a time
+    if batch_size == 1:
+      for n in range(repetitions):
         sub.call("python main.py {} --seed={} --id={}".format(sim_duration, n, n), shell=True)
-      except OSError as e:
-        print("Execution failed: ", e)
-  # In batches
-  else:
-    # Split num of repetitions into batches
-    quotient = repetitions // batch_size
-    remainder = repetitions % batch_size
-    # Run the simulations in parallel as subprocesses
-    for n in range(1, quotient+2):
-      num_proc = batch_size if n * batch_size <= repetitions else remainder
-      procs = []
-      for m in range(num_proc):
-        try:
-          seed = m + batch_size * (n-1)
-          procs += [sub.Popen("python main.py {} --seed={} --id={}".format(sim_duration, seed, seed), shell=True)]
-        except OSError as e:
-          print("Execution failed: ", e)
-      if procs:
-        procs[-1].wait()
+    # In batches
+    else:
+      # Split num of repetitions into batches
+      quotient = repetitions // batch_size
+      remainder = repetitions % batch_size
+      # Run the simulations in parallel as subprocesses
+      num_proc = batch_size if batch_size <= repetitions else remainder
+      procs = [sub.Popen("python main.py {} --seed={} --id={}".format(sim_duration, n, n), shell=True) for n in range(num_proc)]
+      while True:
+        procs_poll = list(map(lambda x: x.poll() != None, procs))
+        if not all(procs_poll):
+          procs[procs_poll.index(False)].wait()
+        elif num_proc < repetitions:
+          temp_num = batch_size if num_proc + batch_size <= repetitions else remainder
+          for n in range(num_proc, num_proc + temp_num):
+            procs += [sub.Popen("python main.py {} --seed={} --id={}".format(sim_duration, n, n), shell=True)]
+          num_proc += temp_num
+        else:
+          break
+  except OSError as e:
+    print("Execution failed: ", e)
   
   ### Merge results from files
   # Get files (as strings)
