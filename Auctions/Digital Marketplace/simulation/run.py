@@ -7,6 +7,8 @@ Created by Jakub Konka on 2012-10-05.
 Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
 import argparse
+import csv
+import math
 import os
 import os.path
 import subprocess as sub
@@ -56,7 +58,49 @@ def main():
   ### Merge results from files
   # Get files (as strings)
   file_paths = (os.path.join(root, f) for root, _, files in os.walk("out") for f in files if f.endswith(".out"))
-  # 
+  # Read data from files
+  headers = []
+  data_in = []
+  for f in file_paths:
+    f_csv = csv.DictReader(open(f, 'rt'))
+    f_dict = {}
+    for row in f_csv:
+      for key in row:
+        f_dict.setdefault(key, []).append(float(row[key]))
+    headers = list(f_dict.keys())
+    data_in.append(f_dict)
+  # Reduce...
+  # Compute means
+  means = {}
+  for header in headers:
+    if header != 'sr_number':
+      zipped = zip(*[dct[header] for dct in data_in])
+      vals = list(map(lambda x: sum(x)/repetitions, zipped))
+      means[header] = vals
+    else:
+      means[header] = data_in[0][header]
+  # Compute standard deviations
+  stds = {}
+  for header in headers:
+    if header != 'sr_number':
+      zipped = zip(*[dct[header] for dct in data_in])
+      vals = []
+      for (tup, mean) in zip(zipped, means[header]):
+        vals += [math.sqrt(sum(map(lambda x: (x-mean)**2, tup)) / (repetitions - 1))]
+      stds[header] = vals
+    else:
+      stds[header] = data_in[0][header]
+  # Save to files
+  with open('out/mean_reduced.out', 'w', newline='', encoding='utf-8') as f:
+    csv_writer = csv.writer(f, delimiter=',')
+    csv_writer.writerow(headers)
+    for tup in zip(*[means[header] for header in headers]):
+      csv_writer.writerow(tup)
+  with open('out/std_reduced.out', 'w', newline='', encoding='utf-8') as f:
+    csv_writer = csv.writer(f, delimiter=',')
+    csv_writer.writerow(headers)
+    for tup in zip(*[stds[header] for header in headers]):
+      csv_writer.writerow(tup)
 
 
 if __name__ == '__main__':
