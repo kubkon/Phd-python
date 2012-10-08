@@ -262,6 +262,8 @@ class DMEventHandler(sim.EventHandler):
     self._duration = 0
     # Initialize save directory
     self._save_dir = ""
+    # Initialize simulation id
+    self._sim_id = -1
     # Initialize service request counter
     self._sr_count = 0
     # Initialize prices history list
@@ -322,6 +324,20 @@ class DMEventHandler(sim.EventHandler):
     Sets save directory
     """
     self._save_dir = save_dir
+  
+  @property
+  def sim_id(self):
+    """
+    Returns simulation id
+    """
+    return self._sim_id
+  
+  @sim_id.setter
+  def sim_id(self, sim_id):
+    """
+    Sets simulation id
+    """
+    self._sim_id = sim_id
   
   def _handle_start(self):
     """
@@ -415,21 +431,18 @@ class DMEventHandler(sim.EventHandler):
     # Create output directory if doesn't exist already
     if not os.path.exists(self._save_dir):
       os.makedirs(self._save_dir)
-    # Write output data to files
-    # 1. Service request number vs prices paid
-    with open(self._save_dir + '/prices.out', mode='w', encoding='utf-8') as f_prices:
-      for (x, y) in zip(range(1, self._sr_count + 1), self._prices):
-        f_prices.write("{},{}\n".format(x, y))
-    # 2. Service request number vs reputation history
-    for b in self._bidders:
-      with open("{}/reputation_{}.out".format(self._save_dir, str(b).lower()), mode='w', encoding='utf-8') as f_reps:
-        for (x, y) in zip(range(1, self._sr_count + 1), b.reputation_history):
-          f_reps.write("{},{}\n".format(x, y))
-    # 3. Profit history
-    for b in self._bidders:
-      with open("{}/profit_{}.out".format(self._save_dir, str(b).lower()), mode='w', encoding='utf-8') as f_profits:
-        for (x, y) in zip(b.profit_history.keys(), b.profit_history.values()):
-          f_profits.write("{},{}\n".format(x, y))
+    # Write output data to a file
+    column_ids = "sr_number,price," + ",".join(["reputation_{}".format(str(b).lower()) for b in self._bidders]) + "\n"
+    with open(self._save_dir + '/' + str(self._sim_id) + '.out', mode='w', encoding='utf-8') as f:
+      f.write(column_ids)
+      for tup in zip(*([range(1, self._sr_count + 1), self._prices] + [b.reputation_history for b in self._bidders])):
+        value_str = ",".join([str(i) for i in tup]) + "\n"
+        f.write(value_str)
+    # # 3. Profit history
+    # for b in self._bidders:
+    #   with open("{}/profit_{}.out".format(self._save_dir, str(b).lower()), mode='w', encoding='utf-8') as f_profits:
+    #     for (x, y) in zip(b.profit_history.keys(), b.profit_history.values()):
+    #       f_profits.write("{},{}\n".format(x, y))
   
 
 class BidderTests(unittest.TestCase):

@@ -72,7 +72,8 @@ def main():
   # Set params
   event_handler.interarrival_rate = interarrival_rate
   event_handler.duration = duration
-  event_handler.save_dir = "out/" + str(sim_id)
+  event_handler.save_dir = "out"
+  event_handler.sim_id = sim_id
   
   ### Simulate
   # Schedule finishing event

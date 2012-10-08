@@ -7,6 +7,8 @@ Created by Jakub Konka on 2012-10-05.
 Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
 import argparse
+import os
+import os.path
 import subprocess as sub
 
 def main():
@@ -51,7 +53,8 @@ def main():
   
   ### Merge results from files
   # Get files (as strings)
-  file_paths = [os.path.join(root, f) for root, _, files in os.walk("out") for f in files if f.endswith(".out")]
+  file_paths = (os.path.join(root, f) for root, _, files in os.walk("out") for f in files if f.endswith(".out"))
+  # 
 
 
 if __name__ == '__main__':
