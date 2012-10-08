@@ -41,15 +41,15 @@ def main():
     # Run the simulations in parallel as subprocesses
     for n in range(1, quotient+2):
       num_proc = batch_size if n * batch_size <= repetitions else remainder
+      procs = []
       for m in range(num_proc):
         try:
           seed = m + batch_size * (n-1)
-          if m < num_proc - 1:
-            sub.Popen("python main.py {} --seed={} --id={}".format(sim_duration, seed, seed), shell=True)
-          else:
-            sub.Popen("python main.py {} --seed={} --id={}".format(sim_duration, seed, seed), shell=True).wait()
+          procs += [sub.Popen("python main.py {} --seed={} --id={}".format(sim_duration, seed, seed), shell=True)]
         except OSError as e:
           print("Execution failed: ", e)
+      if procs:
+        procs[-1].wait()
   
   ### Merge results from files
   # Get files (as strings)
