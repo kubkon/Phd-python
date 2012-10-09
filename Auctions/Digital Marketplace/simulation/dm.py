@@ -6,13 +6,13 @@ dm.py
 Created by Jakub Konka on 2012-08-22.
 Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
+import csv
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import sim
 import unittest
-from itertools import cycle
 
 
 class NumericalToolbox:
@@ -430,20 +430,23 @@ class DMEventHandler(sim.EventHandler):
     Saves results of the simulation
     """
     # Create output directory if doesn't exist already
-    if not os.path.exists(self._save_dir):
-      os.makedirs(self._save_dir)
-    # Write output data to a file
-    column_ids = "sr_number,price," + ",".join(["reputation_{}".format(str(b).lower()) for b in self._bidders]) + "\n"
-    with open(self._save_dir + '/' + str(self._sim_id) + '.out', mode='w', encoding='utf-8') as f:
-      f.write(column_ids)
-      for tup in zip(*([range(1, self._sr_count + 1), self._prices] + [b.reputation_history for b in self._bidders])):
-        value_str = ",".join([str(i) for i in tup]) + "\n"
-        f.write(value_str)
-    # # 3. Profit history
-    # for b in self._bidders:
-    #   with open("{}/profit_{}.out".format(self._save_dir, str(b).lower()), mode='w', encoding='utf-8') as f_profits:
-    #     for (x, y) in zip(b.profit_history.keys(), b.profit_history.values()):
-    #       f_profits.write("{},{}\n".format(x, y))
+    path = self._save_dir + '/' + str(self._sim_id)
+    if not os.path.exists(path):
+      os.makedirs(path)
+    # Write output data to files
+    # 1. Reputation history
+    headers = ['reputation_{}'.format(str(b).lower()) for b in self._bidders]
+    with open(path + '/reputation.out', mode='w', newline='', encoding='utf-8') as f:
+      writer = csv.writer(f, delimiter=',')
+      writer.writerow(headers)
+      for tup in zip(*[b.reputation_history for b in self._bidders]):
+        writer.writerow(tup)
+    # 2. Prices
+    with open(path + '/price.out', mode='w', newline='', encoding='utf-8') as f:
+      writer = csv.writer(f, delimiter=',')
+      writer.writerow(['price'])
+      for p in self._prices:
+        writer.writerow([p])
   
 
 class BidderTests(unittest.TestCase):
