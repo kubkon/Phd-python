@@ -246,6 +246,7 @@ class DMEventHandler(sim.EventHandler):
   # Modeled services and bit-rate requirements
   WEB_BROWSING = 1
   EMAIL = 2
+  # Default bit-rates
   BITRATES = {WEB_BROWSING: 512, EMAIL: 256}
   
   def __init__(self):

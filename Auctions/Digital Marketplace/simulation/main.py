@@ -50,15 +50,18 @@ logging.info("Simulation duration set to: {}".format(sim_duration))
 
 ### Create simulation-specific scenario
 # Create Bidders
-bidders = [dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5, dm.DMEventHandler.EMAIL: 0.45}),
-           dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5, dm.DMEventHandler.EMAIL: 0.45})]
+# bidders = [dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5}),
+#            dm.Bidder(10000, {dm.DMEventHandler.WEB_BROWSING: 0.5})]
+bidders = [dm.Bidder(10000), dm.Bidder(10000)]      
 # Set reputation rating params:
 # increase, decrease, depth, and percentage
-dm.Bidder.rep_update_params = (0.01, 0.01, 10, 0.75)
+dm.Bidder.rep_update_params = (0.01, 0.05, 10, 0.75)
 # Service requests mean interarrival rate (per second)
 interarrival_rate = 1
 # Service requests constant duration (in seconds)
 duration = 2.5 * 60
+# Service types and bit-rates
+bitrates = {dm.DMEventHandler.WEB_BROWSING: 512}
 
 ### Initialize
 # Create new simulation engine
@@ -71,6 +74,8 @@ logging.info("Seed value set to: {}".format(seed))
 event_handler = dm.DMEventHandler()
 # Add bidders to simulation engine
 event_handler.bidders = bidders
+# Set modeled service types
+dm.DMEventHandler.BITRATES = bitrates
 # Set params
 event_handler.interarrival_rate = interarrival_rate
 event_handler.duration = duration
