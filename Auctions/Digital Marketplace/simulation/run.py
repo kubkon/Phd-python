@@ -27,12 +27,15 @@ parser.add_argument('--save_dir', dest='save_dir', default='out',
                     help='output directory')
 parser.add_argument('--initial_seed', dest='init_seed', default=0,
                     type=int, help='base for seed values')
+parser.add_argument('--confidence', dest='confidence', default=0.95,
+                    type=float, help='confidence value')
 args = parser.parse_args()
 repetitions = args.reps
 sim_duration = args.sim_duration
 batch_size = args.batch_size
 save_dir = args.save_dir
 init_seed = args.init_seed
+confidence = args.confidence
 
 ### Run simulations
 try:
@@ -67,49 +70,43 @@ except OSError as e:
 extension = ".out"
 file_names = set([f[:f.find(extension)] for _, _, files in os.walk(save_dir) for f in files if f.endswith(extension)])
 file_paths = [os.path.join(root, f) for root, _, files in os.walk(save_dir) for f in files if f.endswith(extension)]
+dirs = map(lambda x: save_dir + '/' + x, os.listdir(save_dir))
 # Process data
 ref_column = 'sr_number'
 for name in file_names:
   # Read data from files
-  headers = []
   data_in = []
-  for f in file_paths:
-    if name in f:
-      f_csv = csv.DictReader(open(f, 'rt'))
-      f_dict = {}
-      for row in f_csv:
-        for key in row:
-          val = float(row[key]) if key != ref_column else int(row[key])
-          f_dict.setdefault(key, []).append(val)
-      headers = [key for key in f_dict.keys() if key != ref_column]
-      data_in.append(f_dict)
+  for fp in file_paths:
+    if name in fp:
+      with open(fp, 'rt') as f:
+        reader = csv.DictReader(f)
+        dct = {}
+        for row in reader:
+          for key in row:
+            val = float(row[key]) if key != ref_column else int(row[key])
+            dct.setdefault(key, []).append(val)
+        data_in.append(dct)
   # Reduce...
-  # Compute means
-  means = {}
-  for header in headers:
-    zipped = zip(*[dct[header] for dct in data_in])
-    vals = list(map(lambda x: sum(x)/repetitions, zipped))
-    means[header] = vals
-  # Compute standard deviations
-  stds = {}
-  for header in headers:
-    zipped = zip(*[dct[header] for dct in data_in])
-    vals = []
-    for (tup, mean) in zip(zipped, means[header]):
-      vals += [np.sqrt(sum(map(lambda x: (x-mean)**2, tup)) / (repetitions - 1))]
-    stds[header] = vals
+  # Compute mean
+  zipped = zip(*[dct[key] for dct in data_in for key in dct.keys() if key != ref_column])
+  means = list(map(lambda x: sum(x)/repetitions, zipped))
+  # Compute standard deviation
+  zipped = zip(*[dct[key] for dct in data_in for key in dct.keys() if key != ref_column])
+  sds = [np.sqrt(sum(map(lambda x: (x-mean)**2, tup)) / (repetitions - 1)) for (tup, mean) in zip(zipped, means)]
+  # Compute standard error for the mean
+  ses = list(map(lambda x: x/np.sqrt(repetitions), sds))
+  # Compute confidence intervals for the mean
+  cis = list(map(lambda x: x * stats.t.ppf(0.5 + confidence/2, repetitions-1), ses))
   # Save to a file
-  out_headers = [ref_column]
-  for h in headers:
-    out_headers += ['mean_' + h, 'std_' + h]
+  out_headers = [ref_column, 'mean', 'sd', 'se', 'ci']
   with open(save_dir + '/' + name + extension, 'w', newline='', encoding='utf-8') as f:
     writer = csv.writer(f, delimiter=',')
     writer.writerow(out_headers)
-    zip_input = [data_in[0][ref_column]]
-    for h in headers:
-      zip_input += [means[h], stds[h]]
+    zip_input = [data_in[0][ref_column], means, sds, ses, cis]
     for tup in zip(*zip_input):
       writer.writerow(tup)
-# Delete temporary files
-# for f in file_paths:
-#   os.remove(f)
+# Delete temporary files and dirs
+for f in file_paths:
+  os.remove(f)
+for d in dirs:
+  os.rmdir(d)

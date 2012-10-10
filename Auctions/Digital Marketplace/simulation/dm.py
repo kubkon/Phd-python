@@ -435,12 +435,13 @@ class DMEventHandler(sim.EventHandler):
       os.makedirs(path)
     # Write output data to files
     # 1. Reputation history
-    headers = ['sr_number'] + ['reputation_{}'.format(str(b).lower()) for b in self._bidders]
-    with open(path + '/reputation.out', mode='w', newline='', encoding='utf-8') as f:
-      writer = csv.writer(f, delimiter=',')
-      writer.writerow(headers)
-      for tup in zip(*([range(1, self._sr_count+1)] + [b.reputation_history for b in self._bidders])):
-        writer.writerow(tup)
+    for b in self._bidders:
+      headers = ['sr_number', 'reputation']
+      with open(path + '/reputation_{}.out'.format(str(b).lower()), mode='w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f, delimiter=',')
+        writer.writerow(headers)
+        for tup in zip(range(1, self._sr_count+1), b.reputation_history):
+          writer.writerow(tup)
     # 2. Prices
     with open(path + '/price.out', mode='w', newline='', encoding='utf-8') as f:
       writer = csv.writer(f, delimiter=',')
