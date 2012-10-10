@@ -68,6 +68,7 @@ extension = ".out"
 file_names = set([f[:f.find(extension)] for _, _, files in os.walk(save_dir) for f in files if f.endswith(extension)])
 file_paths = [os.path.join(root, f) for root, _, files in os.walk(save_dir) for f in files if f.endswith(extension)]
 # Process data
+ref_column = 'sr_number'
 for name in file_names:
   # Read data from files
   headers = []
@@ -78,8 +79,9 @@ for name in file_names:
       f_dict = {}
       for row in f_csv:
         for key in row:
-          f_dict.setdefault(key, []).append(float(row[key]))
-      headers = list(f_dict.keys())
+          val = float(row[key]) if key != ref_column else int(row[key])
+          f_dict.setdefault(key, []).append(val)
+      headers = [key for key in f_dict.keys() if key != ref_column]
       data_in.append(f_dict)
   # Reduce...
   # Compute means
@@ -97,13 +99,13 @@ for name in file_names:
       vals += [np.sqrt(sum(map(lambda x: (x-mean)**2, tup)) / (repetitions - 1))]
     stds[header] = vals
   # Save to a file
-  out_headers = []
+  out_headers = [ref_column]
   for h in headers:
     out_headers += ['mean_' + h, 'std_' + h]
   with open(save_dir + '/' + name + extension, 'w', newline='', encoding='utf-8') as f:
     writer = csv.writer(f, delimiter=',')
     writer.writerow(out_headers)
-    zip_input = []
+    zip_input = [data_in[0][ref_column]]
     for h in headers:
       zip_input += [means[h], stds[h]]
     for tup in zip(*zip_input):
