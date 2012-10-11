@@ -12,6 +12,7 @@ import os
 import decimal as dc
 import numpy as np
 import scipy.integrate as integrate
+import scipy.stats as stats
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import rc
@@ -480,13 +481,15 @@ def plot_expected_prices_v2(num):
     pbar.update(n + 1)
   pbar.finish()
   print("Calculating average and standard deviation...")
-  # Calculate the average and std dev for each w
+  # Calculate the average, std dev, and 95% confidence intervals for each w
   avg_prices = calc_avg(win_prices)
   std_prices = calc_std_dev(win_prices, avg_prices)
+  alpha = 1 - 0.95
+  ci_prices = list(map(lambda x: stats.t.ppf(1-alpha/2,num-1)*x/np.sqrt(num), std_prices))
   print("Creating and saving plots...")
   # Plot the results
   plt.figure()
-  plt.errorbar(ws, avg_prices, yerr=std_prices, fmt='ro')
+  plt.errorbar(ws, avg_prices, yerr=ci_prices, fmt='ro')
   plt.xlabel(r"Price weight, $w$")
   plt.ylabel(r"Average price, $\bar{p}(w)$")
   plt.ylim([1, 100])
@@ -494,7 +497,7 @@ def plot_expected_prices_v2(num):
   plt.savefig("expected_prices.pdf")
   # Limit the y-range
   plt.figure()
-  plt.errorbar(ws, avg_prices, yerr=std_prices, fmt='ro')
+  plt.errorbar(ws, avg_prices, yerr=ci_prices, fmt='ro')
   plt.xlabel(r"Price weight, $w$")
   plt.ylabel(r"Average price, $\bar{p}(w)$")
   plt.ylim([0, 1])
