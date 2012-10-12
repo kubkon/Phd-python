@@ -84,6 +84,8 @@ class Bidder:
     self._reputation = 0.5
     # Initialize reputation history list
     self._reputation_history = []
+    # Initialize winnings history list
+    self._winning_history = []
     # Initialize profit history dict (key: auction number)
     self._profit_history = {}
     # Assign total capacity available to the bidder
@@ -123,6 +125,13 @@ class Bidder:
     Returns reputation history of the bidder
     """
     return self._reputation_history
+  
+  @property
+  def winning_history(self):
+    """
+    Returns winnings history of the bidder
+    """
+    return self._winning_history
   
   @property
   def profit_history(self):
@@ -189,6 +198,19 @@ class Bidder:
     # Temporarily, save profit assuming a win
     self._current_profit = bid - self._costs[service_type] if price_weight != 0.0 else "Inf"
     return bid
+  
+  def update_winning_history(self, has_won):
+    """
+    Updates winnings history list
+    
+    Keyword arguments:
+    has_won -- True if won current auction; false otherwise
+    """
+    value = 1 if has_won else 0
+    if self._winning_history:
+      self._winning_history += [self._winning_history[-1] + value]
+    else:
+      self._winning_history += [value]
   
   def service_request(self, sr_number, service_type):
     """
@@ -421,6 +443,8 @@ class DMEventHandler(sim.EventHandler):
     # Collect statistics & update system state
     self._prices += [bids[winner]]
     winner = self._bidders[winner]
+    for b in self._bidders:
+      b.update_winning_history(True if b == winner else False)
     winner.service_request(self._sr_count, service_type)
     # Schedule termination event
     self._schedule_st_event(event.time, (winner, service_type))
@@ -434,13 +458,18 @@ class DMEventHandler(sim.EventHandler):
     if not os.path.exists(path):
       os.makedirs(path)
     # Write output data to files
-    # 1. Reputation history
     for b in self._bidders:
-      headers = ['sr_number', 'reputation']
+      # 1. Reputation history
       with open(path + '/reputation_{}.out'.format(str(b).lower()), mode='w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f, delimiter=',')
-        writer.writerow(headers)
+        writer.writerow(['sr_number', 'reputation'])
         for tup in zip(range(1, self._sr_count+1), b.reputation_history):
+          writer.writerow(tup)
+      # 2. History of won auctions (market share)
+      with open(path + '/winnings_{}.out'.format(str(b).lower()), mode='w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f, delimiter=',')
+        writer.writerow(['sr_number', 'winnings'])
+        for tup in zip(range(1, self._sr_count+1), b.winning_history):
           writer.writerow(tup)
     # 2. Prices
     with open(path + '/price.out', mode='w', newline='', encoding='utf-8') as f:

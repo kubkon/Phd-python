@@ -71,6 +71,16 @@ for key in rep_dct:
 # Figure k+1: all reps same plot
 plot_overlaid(rep_dct, input_dir)
 
+### Winning history
+# Load data from files
+win_dct = load_data('winning', input_dir)
+# Plot
+# Figure 1..k=num of bidders: winnings with confidence intervals
+for key in win_dct:
+  plot_with_ci(win_dct[key], key, input_dir)
+# Figure k+1: all winnings same plot
+plot_overlaid(win_dct, input_dir)
+
 ### Prices
 # Load data from files
 price_dct = load_data('price', input_dir)
