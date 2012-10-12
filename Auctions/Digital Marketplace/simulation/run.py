@@ -13,7 +13,6 @@ import os
 import os.path
 import re
 import scipy.stats as stats
-from shutil import copy
 import subprocess as sub
 
 
