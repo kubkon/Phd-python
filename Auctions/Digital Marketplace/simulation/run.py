@@ -11,7 +11,9 @@ import csv
 import numpy as np
 import os
 import os.path
+import re
 import scipy.stats as stats
+from shutil import copy
 import subprocess as sub
 
 
@@ -110,3 +112,19 @@ for f in file_paths:
   os.remove(f)
 for d in dirs:
   os.rmdir(d)
+
+### Save initial conditions to a file (reference)
+stream = []
+phrase = '### Create simulation-specific scenario'
+record_flag = False
+with open('main.py', encoding='utf-8') as f:
+  for line in f:
+    if phrase in line:
+      record_flag = True
+    if record_flag:
+      stream += [line]
+    if re.match('^\s$', line):
+      record_flag = False
+with open(save_dir + '/initial.out', mode='w', encoding='utf-8') as f:
+  for line in stream:
+    f.write(line)
