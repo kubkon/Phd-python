@@ -471,7 +471,7 @@ class DMEventHandler(sim.EventHandler):
         writer.writerow(['sr_number', 'winnings'])
         for tup in zip(range(1, self._sr_count+1), b.winning_history):
           writer.writerow(tup)
-    # 3. Prices
+    # 3. Average prices per service type
     for key in self._prices:
       with open(path + '/price_{}.out'.format(key), mode='w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f, delimiter=',')
