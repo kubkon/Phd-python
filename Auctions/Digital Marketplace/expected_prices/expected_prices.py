@@ -113,20 +113,16 @@ parser.add_argument('reputations', metavar='reputations',
                     help='input reputation list; comma separated')
 parser.add_argument('--save_dir', dest='save_dir', default='out',
                     help='output directory')
-parser.add_argument('--seed', dest='seed', default=0,
-                    type=int, help='base for seed values')
 parser.add_argument('--confidence', dest='confidence', default=0.95,
                     type=float, help='confidence value')
 args = parser.parse_args()
 N = args.N
 reps = list(map(lambda x: float(x), args.reputations.split(',')))
 save_dir = args.save_dir
-seed = args.seed
 confidence = args.confidence
 
 ### Init
 ws = np.linspace(0.001, 1.0, 100)
-prng = np.random.RandomState(seed)
 # Create dir for saving if doesn't exist already
 if not os.path.exists(save_dir):
   os.makedirs(save_dir)
@@ -138,6 +134,7 @@ pbar = pb.ProgressBar(widgets=widgets, maxval=N).start()
 # Run for N times (different seed)
 prices = []
 for n in range(N):
+  prng = np.random.RandomState(n)
   prices += [sample(prng, reps, ws)]
   pbar.update(n + 1)
 pbar.finish()

@@ -18,12 +18,9 @@ parser.add_argument('--batch_size', dest='batch_size', default=4,
                     type=int, help='batch size for multiprocessing')
 parser.add_argument('--save_dir', dest='save_dir', default='out',
                     help='output directory')
-parser.add_argument('--initial_seed', dest='init_seed', default=0,
-                    type=int, help='base for seed values')
 args = parser.parse_args()
 batch_size = args.batch_size
 save_dir = args.save_dir
-init_seed = args.init_seed
 
 ### Init
 reps = [[.25,1.0], [.5,1.0], [.75,1.0], [1.0,1.0],
@@ -35,10 +32,8 @@ reps = [[.25,1.0], [.5,1.0], [.75,1.0], [1.0,1.0],
 try:
   # One process at a time
   if batch_size == 1:
-    seed = init_seed
     for r in reps:
-      sub.call("python expected_prices.py {} {} --seed={} --save_dir={}".format(1000, "{},{}".format(*r), seed, save_dir), shell=True)
-      seed += 1
+      sub.call("python expected_prices.py {} {} --save_dir={}".format(1000, "{},{}".format(*r), save_dir), shell=True)
   # In batches
   else:
     # Split num of repetitions into batches
@@ -47,7 +42,7 @@ try:
     remainder = repetitions % batch_size
     # Run the simulations in parallel as subprocesses
     num_proc = batch_size if batch_size <= repetitions else remainder
-    procs = [sub.Popen("python expected_prices.py {} {} --seed={} --save_dir={}".format(1000, "{},{}".format(*reps[n]), n+init_seed, save_dir), shell=True) for n in range(num_proc)]
+    procs = [sub.Popen("python expected_prices.py {} {} --save_dir={}".format(1000, "{},{}".format(*reps[n]), save_dir), shell=True) for n in range(num_proc)]
     while True:
       procs_poll = list(map(lambda x: x.poll() != None, procs))
       if not all(procs_poll):
@@ -55,7 +50,7 @@ try:
       elif num_proc < repetitions:
         temp_num = batch_size if num_proc + batch_size <= repetitions else remainder
         for n in range(num_proc, num_proc + temp_num):
-          procs += [sub.Popen("python expected_prices.py {} {} --seed={} --save_dir={}".format(1000, "{},{}".format(*reps[n]), n+init_seed, save_dir), shell=True)]
+          procs += [sub.Popen("python expected_prices.py {} {} --save_dir={}".format(1000, "{},{}".format(*reps[n]), save_dir), shell=True)]
         num_proc += temp_num
       else:
         break
