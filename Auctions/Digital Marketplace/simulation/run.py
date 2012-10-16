@@ -99,11 +99,15 @@ for name in file_names:
   # Compute confidence intervals for the mean
   cis = list(map(lambda x: x * stats.t.ppf(0.5 + confidence/2, repetitions-1), ses))
   # Save to a file
-  out_headers = [ref_column, 'mean', 'sd', 'se', 'ci']
   with open(save_dir + '/' + name + extension, 'w', newline='', encoding='utf-8') as f:
     writer = csv.writer(f, delimiter=',')
+    try:
+      zip_input = [data_in[0][ref_column], means, sds, ses, cis]
+      out_headers = [ref_column, 'mean', 'sd', 'se', 'ci']
+    except KeyError:
+      zip_input = [means, sds, ses, cis]
+      out_headers = ['mean', 'sd', 'se', 'ci']
     writer.writerow(out_headers)
-    zip_input = [data_in[0][ref_column], means, sds, ses, cis]
     for tup in zip(*zip_input):
       writer.writerow(tup)
 # Delete temporary files and dirs

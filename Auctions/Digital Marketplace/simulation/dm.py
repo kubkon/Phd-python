@@ -289,8 +289,8 @@ class DMEventHandler(sim.EventHandler):
     self._sim_id = -1
     # Initialize service request counter
     self._sr_count = 0
-    # Initialize prices history list
-    self._prices = []
+    # Initialize price per service type history list
+    self._prices = {}
   
   @property
   def bidders(self):
@@ -441,7 +441,7 @@ class DMEventHandler(sim.EventHandler):
       # Tie
       winner = self._simulation_engine.prng.randint(2)
     # Collect statistics & update system state
-    self._prices += [bids[winner]]
+    self._prices.setdefault(service_type,[]).append(bids[winner])
     winner = self._bidders[winner]
     for b in self._bidders:
       b.update_winning_history(True if b == winner else False)
@@ -471,12 +471,13 @@ class DMEventHandler(sim.EventHandler):
         writer.writerow(['sr_number', 'winnings'])
         for tup in zip(range(1, self._sr_count+1), b.winning_history):
           writer.writerow(tup)
-    # 2. Prices
-    with open(path + '/price.out', mode='w', newline='', encoding='utf-8') as f:
-      writer = csv.writer(f, delimiter=',')
-      writer.writerow(['sr_number','price'])
-      for tup in zip(range(1, self._sr_count+1), self._prices):
-        writer.writerow(tup)
+    # 3. Prices
+    for key in self._prices:
+      with open(path + '/price_{}.out'.format(key), mode='w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f, delimiter=',')
+        writer.writerow(['price'])
+        avg_price = sum(self._prices[key]) / len(self._prices[key])
+        writer.writerow([avg_price])
   
 
 class BidderTests(unittest.TestCase):
