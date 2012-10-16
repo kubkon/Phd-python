@@ -80,13 +80,3 @@ for key in win_dct:
   plot_with_ci(win_dct[key], key, input_dir)
 # Figure k+1: all winnings same plot
 plot_overlaid(win_dct, input_dir)
-
-### Prices
-# Load data from files
-price_dct = load_data('price', input_dir)
-# Plot
-# Figure 1..k=num of service types: prices with confidence intervals
-for key in price_dct:
-  plot_with_ci(price_dct[key], key, input_dir)
-# Figure k+1: all prices same plot
-plot_overlaid(price_dct, input_dir)
