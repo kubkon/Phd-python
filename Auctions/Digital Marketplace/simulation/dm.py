@@ -233,7 +233,7 @@ class Bidder:
       self._success_list += [0]
     logging.debug("{} => user success report list: {}".format(self, self._success_list))
     logging.debug("{} => latest user success report: {}".format(self, self._success_list[-1]))
-    # Compute reputation rating update and flush the user success report list
+    # Compute reputation rating update
     if len(self._success_list) == Bidder.rep_update_params[2]:
       if sum(self._success_list) / len(self._success_list) >= Bidder.rep_update_params[3]:
         rep_decrease = Bidder.rep_update_params[1]
@@ -241,7 +241,7 @@ class Bidder:
       else:
         rep_increase = Bidder.rep_update_params[0]
         self._reputation = self._reputation + rep_increase if self._reputation + rep_increase <= 1.0 else 1.0
-      self._success_list = []
+      self._success_list.pop(0)
     logging.debug("{} => reputation: {}".format(self, self._reputation))
     logging.debug("{} => service type: {}".format(self, service_type))
     logging.debug("{} => available bitrate: {}".format(self, self._available_capacity))
