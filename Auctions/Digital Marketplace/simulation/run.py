@@ -101,12 +101,8 @@ for name in file_names:
   # Save to a file
   with open(save_dir + '/' + name + extension, 'w', newline='', encoding='utf-8') as f:
     writer = csv.writer(f, delimiter=',')
-    try:
-      zip_input = [data_in[0][ref_column], means, sds, ses, cis]
-      out_headers = [ref_column, 'mean', 'sd', 'se', 'ci']
-    except KeyError:
-      zip_input = [means, sds, ses, cis]
-      out_headers = ['mean', 'sd', 'se', 'ci']
+    zip_input = [data_in[0][ref_column], means, sds, ses, cis]
+    out_headers = [ref_column, 'mean', 'sd', 'se', 'ci']
     writer.writerow(out_headers)
     for tup in zip(*zip_input):
       writer.writerow(tup)

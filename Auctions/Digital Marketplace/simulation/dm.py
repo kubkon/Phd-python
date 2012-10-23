@@ -471,13 +471,13 @@ class DMEventHandler(sim.EventHandler):
         writer.writerow(['sr_number', 'winnings'])
         for tup in zip(range(1, self._sr_count+1), b.winning_history):
           writer.writerow(tup)
-    # 3. Average prices per service type
+    # 3. Prices per service type
     for key in self._prices:
       with open(path + '/price_{}.out'.format(key), mode='w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f, delimiter=',')
-        writer.writerow(['price'])
-        avg_price = sum(self._prices[key]) / len(self._prices[key])
-        writer.writerow([avg_price])
+        writer.writerow(['sr_number', 'price'])
+        for tup in zip(range(1, self._sr_count+1), self._prices[key]):
+          writer.writerow(tup)
   
 
 class BidderTests(unittest.TestCase):
