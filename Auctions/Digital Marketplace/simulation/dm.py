@@ -441,7 +441,9 @@ class DMEventHandler(sim.EventHandler):
       # Tie
       winner = self._simulation_engine.prng.randint(2)
     # Collect statistics & update system state
-    self._prices.setdefault(service_type,[]).append(bids[winner])
+    self._prices.setdefault(service_type,([],[]))
+    self._prices[service_type][0].append(self._sr_count)
+    self._prices[service_type][1].append(bids[winner])
     winner = self._bidders[winner]
     for b in self._bidders:
       b.update_winning_history(True if b == winner else False)
@@ -476,7 +478,7 @@ class DMEventHandler(sim.EventHandler):
       with open(path + '/price_{}.out'.format(key), mode='w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f, delimiter=',')
         writer.writerow(['sr_number', 'price'])
-        for tup in zip(range(1, self._sr_count+1), self._prices[key]):
+        for tup in zip(self._prices[key][0], self._prices[key][1]):
           writer.writerow(tup)
   
 

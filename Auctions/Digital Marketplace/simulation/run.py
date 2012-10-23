@@ -28,8 +28,8 @@ parser.add_argument('--save_dir', dest='save_dir', default='out',
                     help='output directory')
 parser.add_argument('--initial_seed', dest='init_seed', default=0,
                     type=int, help='base for seed values')
-parser.add_argument('--confidence', dest='confidence', default=0.95,
-                    type=float, help='confidence value')
+parser.add_argument('--confidence', dest='confidence', default=0.99,
+                    type=float, help='confidence value (default: 0.99)')
 args = parser.parse_args()
 repetitions = args.reps
 sim_duration = args.sim_duration
@@ -72,7 +72,7 @@ extension = ".out"
 file_names = set([f[:f.find(extension)] for _, _, files in os.walk(save_dir) for f in files if f.endswith(extension)])
 file_paths = [os.path.join(root, f) for root, _, files in os.walk(save_dir) for f in files if f.endswith(extension)]
 dirs = map(lambda x: save_dir + '/' + x, os.listdir(save_dir))
-# Process data
+# Initial processing of data (includes warm-up period)
 ref_column = 'sr_number'
 for name in file_names:
   # Read data from files
@@ -106,11 +106,6 @@ for name in file_names:
     writer.writerow(out_headers)
     for tup in zip(*zip_input):
       writer.writerow(tup)
-# Delete temporary files and dirs
-for f in file_paths:
-  os.remove(f)
-for d in dirs:
-  os.rmdir(d)
 
 ### Save initial conditions to a file (reference)
 stream = []
