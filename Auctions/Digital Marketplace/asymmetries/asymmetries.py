@@ -297,7 +297,7 @@ def plot_wrt_w(costs, reps):
   plt.annotate(r"$w_0$", xy=(0.265, 0.25), xycoords='data', xytext=(1,30), textcoords='offset points', arrowprops=dict(arrowstyle="->"), fontsize=18)
   plt.xlabel(r"Price weight, $w$")
   plt.ylabel(r"Offered price, $b_i$")
-  plt.legend(['Bidder 1', 'Bidder 2'], loc='upper right')
+  plt.legend(['Network operator 1', 'Network operator 2'], loc='upper right')
   plt.grid()
   plt.savefig('1.pdf')
   # Compound bid vs weight
@@ -308,7 +308,7 @@ def plot_wrt_w(costs, reps):
   plt.annotate(r"$w_c$", xy=(0.365, 0.605), xycoords='data', xytext=(1,30), textcoords='offset points', arrowprops=dict(arrowstyle="->"), fontsize=18)
   plt.xlabel(r"Price weight, $w$")
   plt.ylabel(r"Compound bid, $\beta(b_i, r_i)$")
-  plt.legend(['Bidder 1', 'Bidder 2'], loc='upper left')
+  plt.legend(['Network operator 1', 'Network operator 2'], loc='upper left')
   plt.grid()
   plt.savefig('2.pdf')
   # Winning prices vs weight
@@ -324,7 +324,7 @@ def plot_wrt_w(costs, reps):
     plt.annotate(r"Lowest price", xy=(0.375, 0.375), xycoords='data', xytext=(5,45), textcoords='offset points', arrowprops=dict(arrowstyle="->"), fontsize=18)
   plt.xlabel(r"Price weight, $w$")
   plt.ylabel(r"Price, $p(w)$")
-  plt.legend(['Bidder 1', 'Bidder 2'], loc='upper right')
+  plt.legend(['Network operator 1', 'Network operator 2'], loc='upper right')
   plt.grid()
   plt.savefig('3.pdf')
 
