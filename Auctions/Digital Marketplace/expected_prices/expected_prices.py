@@ -7,6 +7,7 @@ Created by Jakub Konka on 2012-10-13.
 Copyright (c) 2012 University of Strathclyde. All rights reserved.
 """
 import argparse
+import csv
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import rc
@@ -15,11 +16,6 @@ import os
 import progressbar as pb
 import scipy.stats as stats
 import warnings
-
-## for Palatino and other serif fonts use:
-rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-rc('text', usetex=True)
-matplotlib.rcParams.update({'font.size': 18})
 
 # Ignore RuntimeWarnings for now
 warnings.simplefilter("ignore", RuntimeWarning)
@@ -146,21 +142,11 @@ sd = [np.sqrt(sum(map(lambda x: (x-m)**2, tup))/(N-1)) for (tup, m) in zip(zip(*
 alpha = 1-confidence
 ci = list(map(lambda x: stats.t.ppf(1-alpha/2,N-1)*x/np.sqrt(N), sd))
 
-### Plot
-print("Plotting the results...")
-# Plot the results
-plt.figure()
-plt.errorbar(ws, means, yerr=ci, fmt='ro')
-plt.xlabel(r"Price weight, $w$")
-plt.ylabel(r"Average price, $\bar{p}(w)$")
-plt.ylim([1, 100])
-plt.grid()
-plt.savefig(save_dir + "/expected_prices_{}_{}.pdf".format(*reps))
-# Limit the y-range
-plt.figure()
-plt.errorbar(ws, means, yerr=ci, fmt='ro')
-plt.xlabel(r"Price weight, $w$")
-plt.ylabel(r"Average price, $\bar{p}(w)$")
-plt.ylim([0, 1])
-plt.grid()
-plt.savefig(save_dir + "/expected_prices_{}_{}_limited.pdf".format(*reps))
+### Save to a file
+print("Saving to a file...")
+dest = save_dir + '/' + '_'.join(map(lambda x: str(x), reps)) + '.out'
+with open(dest, newline='', mode='w', encoding='utf-8') as f:
+  writer = csv.writer(f, delimiter=',')
+  writer.writerow(['w', 'mean', 'sd', 'ci'])
+  for tup in zip(ws, means, sd, ci):
+    writer.writerow(tup)
