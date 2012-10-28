@@ -43,14 +43,14 @@ for fn in file_names:
 print("Plotting the results...")
 # Plot the results
 plt.figure()
-styles = cycle(['.', ',', 'o', 's'])
+styles = cycle(['.', 'x', 'o', 's'])
 legend = []
-for key in data_dct:
+for key in sorted(data_dct.keys()):
   plt.plot(data_dct[key]['w'], data_dct[key]['mean'], next(styles))
-  legend += [', '.join(key.split('_'))]
+  legend += ['(' + ', '.join(key.split('_')) + ')']
 plt.xlabel(r"Price weight, $w$")
 plt.ylabel(r"Average price")
-plt.ylim([0, 1])
+plt.ylim([0.5, 5])
 plt.legend(legend, prop={'size': 14})
 plt.grid()
 plt.savefig(save_dir + "/expected_prices.pdf")
