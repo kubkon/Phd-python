@@ -2,4 +2,5 @@
 .DS_STORE*
 *.txt
 *.pyc
+*.out
 Auctions/Digital\ Marketplace/simulation/SimulationEngine

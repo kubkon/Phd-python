@@ -48,6 +48,11 @@ legend = []
 for key in sorted(data_dct.keys()):
   plt.plot(data_dct[key]['w'], data_dct[key]['mean'], next(styles))
   legend += ['(' + ', '.join(key.split('_')) + ')']
+plt.annotate('', xy=(0.4, 2.0), xycoords='data',
+             xytext=(0.18, 0.9), textcoords='data',
+             arrowprops=dict(arrowstyle="->"), fontsize=18)
+plt.annotate(r"as $|r_i-r_j|$ increases", xy=(0.4, 2.0),
+             xycoords='data', fontsize=18)
 plt.xlabel(r"Price weight, $w$")
 plt.ylabel(r"Average price")
 plt.ylim([0.5, 5])
