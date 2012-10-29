@@ -11,6 +11,7 @@ from csv import DictReader
 from itertools import cycle
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.offsetbox as moffsetbox
 from matplotlib import rc
 import os
 
@@ -44,10 +45,9 @@ print("Plotting the results...")
 # Plot the results
 plt.figure()
 styles = cycle(['.', 'x', 'o', 's'])
-legend = []
 for key in sorted(data_dct.keys()):
-  plt.plot(data_dct[key]['w'], data_dct[key]['mean'], next(styles))
-  legend += ['(' + ', '.join(key.split('_')) + ')']
+  label = '(' + ', '.join(key.split('_')) + ')'
+  plt.plot(data_dct[key]['w'], data_dct[key]['mean'], next(styles), label=label)
 plt.annotate('', xy=(0.4, 2.0), xycoords='data',
              xytext=(0.18, 0.9), textcoords='data',
              arrowprops=dict(arrowstyle="->"), fontsize=18)
@@ -56,6 +56,11 @@ plt.annotate(r"as $|r_i-r_j|$ increases", xy=(0.4, 2.0),
 plt.xlabel(r"Price weight, $w$")
 plt.ylabel(r"Average price")
 plt.ylim([0.5, 5])
-plt.legend(legend, prop={'size': 14})
 plt.grid()
+l = plt.legend(prop={'size':14})
+matplotlib.rcParams.update({'font.size': 13})
+txt = moffsetbox.TextArea(r"$(r_i, r_j)$")
+box = l._legend_box
+box.get_children().insert(0, txt)
+box.set_figure(box.figure)
 plt.savefig(save_dir + "/expected_prices.pdf")
