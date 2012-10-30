@@ -50,7 +50,7 @@ for key in sorted(data_dct.keys()):
 plt.annotate('', xy=(0.4, 2.0), xycoords='data',
              xytext=(0.18, 0.9), textcoords='data',
              arrowprops=dict(arrowstyle="->"), fontsize=18)
-plt.annotate(r"as $|r_i-r_j|$ increases", xy=(0.4, 2.0),
+plt.annotate(r"as $(r_j-r_i)$ increases", xy=(0.4, 2.0),
              xycoords='data', fontsize=18)
 plt.xlabel(r"Price weight, $w$")
 plt.ylabel(r"Average price")
