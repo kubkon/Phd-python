@@ -29,8 +29,7 @@ save_dir = args.save_dir
 ### Load data from files
 print("Loading data from files...")
 extension = '.out'
-file_names = [f[:f.find(extension)] for root, _, files in os.walk(save_dir) for f in files \
-              if f.endswith(extension) and 'transient' not in root and 'steady-state' not in root]
+file_names = [f[:f.find(extension)] for root, _, files in os.walk(save_dir) for f in files if f.endswith(extension)]
 data_dct = {}
 for fn in file_names:
   data_dct[fn] = {}
@@ -58,8 +57,8 @@ plt.ylabel(r"Average price")
 plt.ylim([0.5, 5])
 plt.grid()
 l = plt.legend(prop={'size':14})
-matplotlib.rcParams.update({'font.size': 13})
-txt = moffsetbox.TextArea(r"$(r_i, r_j)$")
+matplotlib.rcParams.update({'font.size': 14})
+txt = moffsetbox.TextArea(r"Line\hspace{7mm} ($r_i$,\hspace{2.5mm} $r_j$)")
 box = l._legend_box
 box.get_children().insert(0, txt)
 box.set_figure(box.figure)
