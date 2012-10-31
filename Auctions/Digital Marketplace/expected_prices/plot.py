@@ -49,9 +49,9 @@ for key in sorted(data_dct.keys()):
   plt.plot(data_dct[key]['w'], data_dct[key]['mean'], next(styles), label=label)
 plt.annotate('', xy=(0.4, 2.0), xycoords='data',
              xytext=(0.18, 0.9), textcoords='data',
-             arrowprops=dict(arrowstyle="->"), fontsize=18)
+             arrowprops=dict(arrowstyle="->"), fontsize=14)
 plt.annotate(r"as $(r_j-r_i)$ increases", xy=(0.4, 2.0),
-             xycoords='data', fontsize=18)
+             xycoords='data', fontsize=14)
 plt.xlabel(r"Price weight, $w$")
 plt.ylabel(r"Average price")
 plt.ylim([0.5, 5])

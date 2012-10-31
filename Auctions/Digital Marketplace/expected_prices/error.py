@@ -38,6 +38,7 @@ for comb in fn_comb:
 
     ### Calculate absolute errors
     error = [abs(x-y) for (x,y) in zip(data[0]['mean'], data[1]['mean'])]
-    print("Maximum absolute error for reps {}: {}".format(comb, max(error)))
+    rel_error = map(lambda x: x / data[0]['mean'][error.index(max(error))], error)
+    print("Maximum relative error for reps {}: {}".format(comb, max(rel_error)))
   except IOError:
     continue
