@@ -34,11 +34,13 @@ def simulate_1_stage(N, pmin, pmax):
 	w = np.linspace(0, 1, w_range) # Price weights
 	# Prices calculation
 	costs = [np.random.uniform(pmin, pmax) for i in range(N)] # costs drawn from P~U(pmin,pmax)
+	costs = [0.2548, 0.2728, 0.4084]
 	# inv_prices = ((N-1)/pmax / (1-c/pmax)**(N-1) * integral.quad(lambda x,n=N: (1-x/pmax)**(N-2) / x, c, pmax)[0] for c in costs)
 	# prices = map(lambda x: 1/x, inv_prices) # pricing vector
 	prices = [(N-1) / (1 - c)**(N-1) * integral.quad(lambda x, n=N: x * (1-x)**(N-2), c, pmax)[0] for c in costs]
 	# Calculation of the winning bid
 	rep = [np.random.uniform(0, 1) for i in range(N)] # reputation drawn from X~U(0,1)
+	rep = [0.3889, 0.5528, 0.2031]
 	bids = map(lambda x,y: w*x + (1-w)*y, prices, rep) # bids
 	winners = [min(enumerate([bids[n][i] for n in range(N)]), key=itemgetter(1))[0] for i in range(w_range)] # winners
 	# Saving & plotting the results
@@ -71,7 +73,7 @@ def simulate_1_stage(N, pmin, pmax):
 	plt.ylim([0, pmax])
 	plt.xlabel(r"Price weight, $w$")
 	plt.ylabel(r"Compound bid, $\beta(b,r)=wb + (1-w)r$")
-	legend = [r"Bidder {0}".format(n+1) for n in range(N)]
+	legend = [r"Network operator {0}".format(n+1) for n in range(N)]
 	plt.legend(legend, loc='upper right')
 	plt.grid()
 	plt.savefig("Bids.pdf")
