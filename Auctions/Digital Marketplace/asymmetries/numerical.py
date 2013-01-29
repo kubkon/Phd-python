@@ -1,6 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+def euler(odes, initials, step, end):
+  table_y1, table_y2 = [initials[0]], [initials[1]]
+  x = initials[0][0]
+  y1 = initials[0][1]
+  y2 = initials[1][1]
+  while x < end:
+    y1 += step * odes[0](x,y1,y2)
+    y2 += step * odes[1](x,y1,y2)
+    x += step
+    if x < end:
+      table_y1 += [(x, y1)]
+      table_y2 += [(x, y2)]
+  return (table_y1, table_y2)
+
 def runge_kutta(odes, initials, step, end):
   table_y1, table_y2 = [initials[0]], [initials[1]]
   x = initials[0][0]
@@ -32,11 +46,13 @@ c2 = [(1-w)*r2, (1-w)*r2 + w]
 b = [(c1[0]*c2[0] - ((c1[1] + c2[1]) / 2)**2) / (c1[0] - c1[1] + c2[0] - c2[1]),
     (c1[1] + c2[1]) / 2]
 
-# Numerical approximation (Runge-Kutta)
+# Numerical approximation (Euler & Runge-Kutta)
 ode1 = lambda x, y1, y2: (y1 - c1[1]) / (y2 - x)
 ode2 = lambda x, y1, y2: (y2 - c2[1]) / (y1 - x)
 step = 0.01
-table_y1, table_y2 = runge_kutta((ode1, ode2), ((b[0], c1[0]), (b[0], c2[0])),
+e_y1, e_y2 = euler((ode1, ode2), ((b[0], c1[0]), (b[0], c2[0])),
+    step, b[1])
+rk_y1, rk_y2 = runge_kutta((ode1, ode2), ((b[0], c1[0]), (b[0], c2[0])),
     step, b[1])
 
 # Explicitly derived
@@ -49,13 +65,15 @@ inv2 = lambda x: c2[1] + (c1[1]-c2[1])**2 / (d2*(c1[1]+c2[1]-2*x)*np.exp((c1[1]-
 
 # Plot
 plt.figure()
-ys = list(map(lambda x: x[0], table_y1))
-plt.plot(list(map(lambda x: x[1], table_y1)), ys, '*')
+ys = list(map(lambda x: x[0], rk_y1))
+#plt.plot(list(map(lambda x: x[1], e_y1)), ys, '*')
+plt.plot(list(map(lambda x: x[1], rk_y1)), ys, 'o')
 plt.plot(list(map(inv1, np.linspace(b[0], b[1], 100))), np.linspace(b[0], b[1], 100))
 plt.grid()
 plt.savefig('bidder_1.pdf')
 plt.figure()
-plt.plot(list(map(lambda x: x[1], table_y2)), ys, 'o')
+#plt.plot(list(map(lambda x: x[1], e_y2)), ys, '*')
+plt.plot(list(map(lambda x: x[1], rk_y2)), ys, 'o')
 plt.plot(list(map(inv2, np.linspace(b[0], b[1], 100))), np.linspace(b[0], b[1], 100))
 plt.grid()
 plt.savefig('bidder_2.pdf')
