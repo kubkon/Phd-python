@@ -24,9 +24,9 @@ def runge_kutta(odes, initials, step, end):
   return (table_y1, table_y2)
 
 # Scenario
-w = 0.75
-r1 = 0.5
-r2 = 0.4
+w = 0.5
+r1 = 0.75
+r2 = 0.25
 c1 = [(1-w)*r1, (1-w)*r1 + w]
 c2 = [(1-w)*r2, (1-w)*r2 + w]
 b = [(c1[0]*c2[0] - ((c1[1] + c2[1]) / 2)**2) / (c1[0] - c1[1] + c2[0] - c2[1]),
