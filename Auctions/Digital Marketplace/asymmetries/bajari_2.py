@@ -35,15 +35,35 @@ def runge_kutta(odes, initials, step, end):
   return (table_y1, table_y2, table_y3)
 
 # Scenario
-w = 0.75
+w = 0.5
 r1 = 0.25
 r2 = 0.5
 r3 = 0.75
 c1 = [(1-w)*r1, (1-w)*r1 + w]
 c2 = [(1-w)*r2, (1-w)*r2 + w]
 c3 = [(1-w)*r3, (1-w)*r3 + w]
-b_upper = ((c1[1] + c2[1] + c3[1]) + np.sqrt((c1[1]+c2[1]+c3[1])**2 - 3*(c1[1]*c2[1] + c1[1]*c3[1] + c2[1]*c3[1]))) / 3
-b_upper = 0.839
+
+# Estimating upper bound on bids
+def F2(x):
+  if x < c2[0]:
+    return 0.0
+  elif x > c2[1]:
+    return 1.0
+  else:
+    return (x - c2[0]) / (c2[1] - c2[0])
+
+def F3(x):
+  if x < c3[0]:
+    return 0.0
+  elif x > c3[1]:
+    return 1.0
+  else:
+    return (x - c3[0]) / (c3[1] - c3[0])
+
+b = np.linspace(c1[1], c2[1], 10000)
+func = lambda x: (x-c1[1])*(1-F2(x))*(1-F3(x))
+tabulated = [func(x) for x in b]
+b_upper = b.tolist()[tabulated.index(max(tabulated))]
 print("Terminal condition: ", b_upper)
 
 # Numerical approximation (Runge-Kutta)
@@ -55,7 +75,8 @@ error = 0.000001
 high = b_upper
 low = c1[0]
 guess_bid = 0.5*(low + high)
-guess_costs = [c1[0], c1[0], c1[0]]
+cost = c3[0]
+guess_costs = [cost, cost, cost]
 while (high - low) >= error:
   rk_y1, rk_y2, rk_y3 = runge_kutta((ode1, ode2, ode3), ((guess_bid, guess_costs[0]), (guess_bid, guess_costs[1]), (guess_bid, guess_costs[2])), 
       step, b_upper)
@@ -77,14 +98,19 @@ while (high - low) >= error:
   # Update guessed initial bid
   guess_bid = 0.5*(low + high)
   # Update guesses initial costs
-  cost_3 = guess_bid - 2 / (sum([1/(guess_bid - c1[0]),1/(guess_bid - c2[0]),1/(guess_bid - c3[0])]))
-  cost_2 = guess_bid - 1 / (sum([1/(guess_bid - c1[0]),1/(guess_bid - c2[0])]))
-  if cost_2>=c2[0] and cost_2<c3[0]:
-    guess_costs = [min(c1[0], cost_2), min(c2[0], cost_2), min(c3[0], cost_2)]
-  elif cost_3>=c3[0]:
-    guess_costs = [min(c1[0], cost_3), min(c2[0], cost_3), min(c3[0], cost_3)]
+  if guess_bid > c3[0]:
+    tmp = guess_bid - 2 / (sum([1/(guess_bid - c1[0]),1/(guess_bid - c2[0]),1/(guess_bid - c3[0])]))
+    print("k=3: ", tmp, c3[0])
+    if c3[0] <= tmp:
+      cost = tmp
+  if guess_bid > c2[0]:
+    tmp = guess_bid - 1 / (sum([1/(guess_bid - c1[0]),1/(guess_bid - c2[0])]))
+    print("k=2: ", tmp, c2[0], c3[0])
+    if c2[0] <= tmp and tmp < c3[0]:
+      cost = tmp
   else:
     pass
+  guess_costs = [min(c1[0], cost), min(c2[0], cost), min(c3[0], cost)]
 print("Guessed initial bid: ", guess_bid)
 print("Guessed initial costs: ", guess_costs)
 
