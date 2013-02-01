@@ -53,9 +53,10 @@ def approximate_bids(w, reps):
   if n == 2:
     objective_func = lambda x: (x - upper_extremities[0])*(1 - cdfs[0](x))
   else:
-    objective_func = lambda x: (x - upper_extremities[0])*fts.reduce(lambda p, r: (1 - p)*(1 - r), [cdf(x) for cdf in cdfs])
+    objective_func = lambda x: (x - upper_extremities[0])*fts.reduce(lambda p, r: p*r, [(1-cdf(x)) for cdf in cdfs])
   tabulated = [objective_func(b) for b in bs]
-  b_upper = bs.tolist()[tabulated.index(max(tabulated))]
+  maximum = max(tabulated)
+  b_upper = min([b for b, i in zip(bs, range(len(bs))) if tabulated[i] == maximum])
   print("Terminal condition: ", b_upper)
   # Create system of ODEs
   ode = lambda d, x, y, ys: (d - y) / (n - 1) * ((2 - n) / (x - y) + sum(map(lambda t: 1 / (x - t), ys)))
@@ -98,9 +99,11 @@ def approximate_bids(w, reps):
   return tables
 
 # Scenario
-w = 0.8
-reps = [0.25, 0.5, 0.75]
+w = 0.6
+reps = [0.25, 0.5, 0.5]
 tables = approximate_bids(w, reps)
+for table in tables:
+  print(table[-1][1], table[-1][0])
 bids = [list(map(lambda x: x[0], table)) for table in tables]
 costs = [list(map(lambda x: x[1], table)) for table in tables]
 plt.figure()
