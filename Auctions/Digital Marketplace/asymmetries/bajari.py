@@ -63,7 +63,7 @@ def approximate_bids(w, reps):
   odes = [fts.partial(ode, d) for d in upper_extremities]
   # Numerical approximation (Runga-Kutta)
   step = 0.00001
-  error = 0.000001
+  error = 0.0000001
   high = b_upper
   low = lower_extremities[0]
   guess_bid = 0.5*(low + high)
@@ -84,23 +84,26 @@ def approximate_bids(w, reps):
     # Update guessed initial costs
     for i in range(1, n):
       if guess_bid > lower_extremities[i]:
-        tmp = guess_bid - i / (sum([1/(guess_bid - l) for l in lower_extremities[:i+1]]))
+        tmp = guess_bid + i / (sum([1/(guess_bid - l) for l in lower_extremities[:i+1]]))
         print("k={}: {}".format(i+1, tmp))
         if lower_extremities[i] <= tmp:
           try:
             if tmp < lower_extremities[i+1]:
               cost = tmp
+              k = i+1
               break
           except IndexError:
             cost = tmp
+            k = i+1
     guess_costs = [min(l, cost) for l in lower_extremities]
+  print("K value: ", k)
   print("Initial bid: ", guess_bid)
   print("Initial costs: ", guess_costs)
   return tables
 
 # Scenario
-w = 0.6
-reps = [0.25, 0.5, 0.5]
+w = 0.41
+reps = [0.25, 0.5, 0.85]
 tables = approximate_bids(w, reps)
 for table in tables:
   print(table[-1][1], table[-1][0])
