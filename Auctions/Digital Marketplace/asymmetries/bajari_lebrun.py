@@ -41,16 +41,18 @@ def approximate_bids(w, reps):
     return [(upper_extremities[i]-ys[i]) / (n-1) * (M.dot(I))[i] for i in range(n)]
   # Numerical approximation
   # Initialize
-  error = 0.000001
+  error = 0.0000001
   high = b_upper
   low = lower_extremities[1]
-  while (high - low) >= error:
+  results = []
+  while not (high - low < error):
     # Update guessed value of initial bid
     guess_bid = 0.5*(low + high)
     # Update guessed initial costs
+    cost = None
     for i in range(1, n):
       if guess_bid > lower_extremities[i]:
-        tmp = guess_bid + i / (sum([1/(guess_bid - l) for l in lower_extremities[:i+1]]))
+        tmp = guess_bid - i / (sum([1/(guess_bid - l) for l in lower_extremities[:i+1]]))
         if lower_extremities[i] <= tmp:
           try:
             if tmp < lower_extremities[i+1]:
@@ -62,31 +64,26 @@ def approximate_bids(w, reps):
             cost = tmp
             k = i+1
             print("{}: {}".format(k, cost))
-    guess_costs = []
-    for l in lower_extremities:
-      try:
-        guess_costs += [min(l, cost)]
-      except NameError:
-        guess_costs += [l]
+    guess_costs = [min(l, cost) if cost is not None else l for l in lower_extremities]
     print(guess_costs)
-    bids = np.linspace(guess_bid, b_upper, 100000)
+    bids = np.linspace(guess_bid, b_upper-0.1, 10000)
     tables = scint.odeint(ode, guess_costs, bids)
+    results += [tables]
     costs = [list(map(lambda x: x[i], tables)) for i in range(n)]
     condition1 = [all(map(lambda x: x >= g_cost and x <= b_upper, cost)) for g_cost, cost in zip(guess_costs, costs)]
-    #condition1 = [all(map(lambda x: x >= lower_extremities[0] and x <= b_upper, cost)) for cost in costs]
-    condition2 = [all(x < y for x, y in zip(cost, bids)) for cost in costs]
+    condition2 = [all(x < y for x, y in zip(cost[:-1], bids[:-1])) for cost in costs]
     if all(condition1) and all(condition2):
       high = guess_bid
     else:
       low = guess_bid
   print("Initial bid: ", guess_bid)
   print("Initial costs: ", guess_costs)
-  return (bids, costs)
+  return (bids, costs, results)
 
 # Scenario
 w = 0.5
-reps = [0.6, 0.65, 0.7]
-bids, costs = approximate_bids(w, reps)
+reps = [0.25, 0.5, 0.75]
+bids, costs, results = approximate_bids(w, reps)
 for cost in costs:
   print(bids[-1], cost[-1])
 plt.figure()
@@ -95,4 +92,10 @@ for cost in costs:
 plt.grid()
 plt.legend(['Bidder {}'.format(i) for i in range(len(reps))], loc='upper left')
 plt.savefig('bids.pdf')
+
+plt.figure()
+for r in results:
+  costs = list(map(lambda x: x[2], r))
+  plt.plot(costs, bids)
+plt.savefig('hmm.pdf')
 
