@@ -58,11 +58,12 @@ def forward_shooting(bs, lower_extremities, upper_extremities, granularity=10000
     costs, _ = recur(k, [[c] for c in init_costs], bids)
   return costs, bids
 
-def initial_estimate(b_upper, lower_extremities, upper_extremities, error=0.00001):
+def initial_estimate(b_upper, lower_extremities, upper_extremities, error=0.000001):
   # Initialize the algorithm
   high = b_upper
   low = lower_extremities[1]
-  while not (high - low < error):
+  costs = [[upper_extremities[-1]]]
+  while high - low > error and abs(costs[0][-1] - upper_extremities[0]) > error:
     # Update guessed value of the initial bid
     guess_bid = 0.5*(low + high)
     # Perform forward shooting
@@ -77,7 +78,8 @@ def initial_estimate(b_upper, lower_extremities, upper_extremities, error=0.0000
 
 def refined_estimate(bs, lower_extremities, upper_extremities, granularity=1000):
   results = {}
-  for b in np.linspace(bs[0]-0.05, bs[0]+0.05, granularity):
+  search_range = np.linspace(bs[0]-0.05, bs[0]+0.05, granularity).tolist() + [bs[0]]
+  for b in search_range:
     costs, bids = forward_shooting([b, bs[1]], lower_extremities, upper_extremities)
     condition1 = [all(map(lambda x: x >= cost[0] and x <= bs[1], cost)) for cost in costs]
     condition2 = [all(x < y for x, y in zip(cost[:-1], bids[:-1])) for cost in costs]
@@ -91,8 +93,8 @@ def refined_estimate(bs, lower_extremities, upper_extremities, granularity=1000)
   return refined[0][0]
 
 # Scenario
-w = 0.75
-reps = [0.25, 0.5, 0.95]
+w = 0.5
+reps = [0.25, 0.5, 0.75]
 # Estimate cost support bounds
 lower_extremities = [(1-w)*r for r in reps]
 upper_extremities = [(1-w)*r + w for r in reps]
