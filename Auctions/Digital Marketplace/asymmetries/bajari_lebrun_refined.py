@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate as scint
 
-def forward_shooting(bs, lower_extremities, upper_extremities, granularity=10000):
+def forward_shooting(bs, lower_extremities, upper_extremities, power=10, granularity=1000):
   # Define function describing the system of ODEs
   def ode(k, ys, t):
     M = 1/(k-1) * (np.diag([1-k for i in range(k)]) + np.ones((k,k)))
@@ -12,6 +12,13 @@ def forward_shooting(bs, lower_extremities, upper_extremities, granularity=10000
   # Define function describing bidding extension (below cost)
   def extension(k, ys, t):
     return t - (k - 1) / sum([1/(t-y) for y in ys])
+  # Define function for creating a nonuniformly spaced grid
+  def grid(start, stop, power=10, granularity=1000):
+    grids = []
+    for i in range(power):
+      grids += [np.linspace(start, stop, granularity)]
+      start = grids[i][int(granularity/2)]
+    return sorted(list(fts.reduce(lambda x,y: x.union(y), map(lambda x: set(x), grids))))
   
   # Infer number of bidders
   n = len(lower_extremities)
@@ -30,7 +37,8 @@ def forward_shooting(bs, lower_extremities, upper_extremities, granularity=10000
           cost = tmp
           k = i+1
   init_costs = [min(l, cost) if cost is not None else l for l in lower_extremities]
-  bids = np.linspace(bs[0], bs[1], granularity)
+  #bids = np.linspace(bs[0], bs[1], granularity)
+  bids = grid(bs[0], bs[1], power=power, granularity=granularity)
   if k >= n:
     node = lambda ys, t: ode(n, ys, t)
     tables = scint.odeint(node, init_costs, bids)
@@ -48,7 +56,8 @@ def forward_shooting(bs, lower_extremities, upper_extremities, granularity=10000
           stop_index = diffs.index(min(diffs))
           tmps = [list(map(lambda x: x[i], ode_tables[:stop_index+1])) for i in range(k)]
           tmps += [ext_tables[:stop_index+1] for i in range(n-k)]
-          bids = np.linspace(bids[stop_index], bs[1], len(bids)-stop_index)
+          #bids = np.linspace(bids[stop_index], bs[1], len(bids)-stop_index)
+          bids = bids[stop_index:]
           k += lower_extremities.count(lower_extremities[k]) - 1
         else:
           tmps = [list(map(lambda x: x[i], ode_tables)) for i in range(k)]
@@ -58,7 +67,7 @@ def forward_shooting(bs, lower_extremities, upper_extremities, granularity=10000
     costs, _ = recur(k, [[c] for c in init_costs], bids)
   return costs, bids
 
-def initial_estimate(b_upper, lower_extremities, upper_extremities, error=0.000001):
+def initial_estimate(b_upper, lower_extremities, upper_extremities, error=0.0000001):
   # Initialize the algorithm
   high = b_upper
   low = lower_extremities[1]
@@ -122,7 +131,7 @@ b_upper = min([b for b, i in zip(bs, range(len(bs))) if tabulated[i] == maximum]
 # Initial estimate of the lower bound on bids
 b_lower = initial_estimate(b_upper, lower_extremities, upper_extremities)
 # Refined estimate of the lower bound on bids
-b_lower = refined_estimate([b_lower, b_upper], lower_extremities, upper_extremities)
+#b_lower = refined_estimate([b_lower, b_upper], lower_extremities, upper_extremities)
 # Approximate using refined estimate
 costs, bids = forward_shooting([b_lower, b_upper], lower_extremities, upper_extremities)
 
