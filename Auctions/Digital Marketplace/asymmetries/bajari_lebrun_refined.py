@@ -71,8 +71,8 @@ def initial_estimate(b_upper, lower_extremities, upper_extremities, error=0.0000
   # Initialize the algorithm
   high = b_upper
   low = lower_extremities[1]
-  costs = [[upper_extremities[-1]]]
-  while high - low > error and abs(costs[0][-1] - upper_extremities[0]) > error:
+  costs = [[u] for u in upper_extremities]
+  while high - low > error and max([abs(cost[-1] - b_upper) for cost in costs]) > error:
     # Update guessed value of the initial bid
     guess_bid = 0.5*(low + high)
     # Perform forward shooting
@@ -102,7 +102,7 @@ def refined_estimate(bs, lower_extremities, upper_extremities, granularity=1000)
   return refined[0][0]
 
 # Scenario
-w = 0.5
+w = 0.6
 reps = [0.25, 0.5, 0.75]
 # Estimate cost support bounds
 lower_extremities = [(1-w)*r for r in reps]
