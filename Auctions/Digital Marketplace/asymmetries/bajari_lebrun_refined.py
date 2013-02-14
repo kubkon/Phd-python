@@ -101,8 +101,31 @@ def refined_estimate(bs, lower_extremities, upper_extremities, granularity=1000)
   # FIX:ME
   return refined[0][0]
 
+def verify_sufficiency(costs, bids, bs, cdfs, step=100):
+  n = len(lower_extremities)
+  best_responses = []
+  sampled_costs = [c[::step] for c in costs]
+  for i in range(n):
+    best_response = []
+    for c in sampled_costs[i]:
+      feasible_bids = np.linspace(c, bs[1], 100)
+      utility = []
+      for b in feasible_bids:
+        if b < bids[0]:
+          utility += [(b, (b-c))]
+        else:
+          diffs = list(map(lambda x: abs(x-b), bids))
+          index = diffs.index(min(diffs))
+          t_cdfs = list(filter(lambda x: cdfs.index(x) != i, cdfs))
+          indexes = [j for j in range(n) if j != i]
+          probability = fts.reduce(lambda x,y: x*y, [(1-cdfs[i](costs[i][index])) for i in indexes], 1)
+          utility += [(b, (b-c)*probability)]
+      best_response += [max(utility, key=lambda x: x[1])[0]]
+    best_responses += [best_response]
+  return sampled_costs, best_responses
+
 # Scenario
-w = 0.6
+w = 0.5
 reps = [0.25, 0.5, 0.75]
 # Estimate cost support bounds
 lower_extremities = [(1-w)*r for r in reps]
@@ -131,7 +154,7 @@ b_upper = min([b for b, i in zip(bs, range(len(bs))) if tabulated[i] == maximum]
 # Initial estimate of the lower bound on bids
 b_lower = initial_estimate(b_upper, lower_extremities, upper_extremities)
 # Refined estimate of the lower bound on bids
-#b_lower = refined_estimate([b_lower, b_upper], lower_extremities, upper_extremities)
+b_lower = refined_estimate([b_lower, b_upper], lower_extremities, upper_extremities, granularity=100)
 # Approximate using refined estimate
 costs, bids = forward_shooting([b_lower, b_upper], lower_extremities, upper_extremities)
 
@@ -145,4 +168,19 @@ for c in costs:
 plt.grid()
 plt.legend(['Bidder {}'.format(i) for i in range(len(reps))], loc='upper left')
 plt.savefig('approximation.pdf')
+
+# Verify sufficiency
+cdfs = [fts.partial(F, bounds) for bounds in zip(lower_extremities, upper_extremities)]
+s_costs, s_bids = verify_sufficiency(costs, bids, [b_lower, b_upper], cdfs)
+
+plt.figure()
+for c in costs:
+  plt.plot(c, bids)
+for c, b in zip(s_costs, s_bids):
+  plt.plot(c, b, '.')
+plt.grid()
+labels = ['Bidder {}'.format(i) for i in range(len(reps))]
+labels += ['BR {}'.format(i) for i in range(len(reps))]
+plt.legend(labels, loc='upper left')
+plt.savefig('sufficiency.pdf')
 
