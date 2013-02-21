@@ -14,6 +14,18 @@ uniformPDF a b x
   | x <= a || x >= b = 0
   | otherwise = realToFrac (1 / (b-a))
 
+-- Lower extremities
+lowerExt :: Double -- price weight (w)
+  -> [Double]      -- list of reputations
+  -> [Double]      -- corresponding list of lower extremities
+lowerExt w reps = map (\r -> (1-w)*r) reps
+
+-- Upper extremities
+upperExt :: Double -- price weight (w)
+  -> [Double]      -- list of reputations
+  -> [Double]      -- corresponding list of upper extremities
+upperExt w reps = map (\l -> l+w) $ lowerExt w reps
+
 -- (Scalar) cost function
 costFunc :: Double     -- lower bound on bids
   -> DPV.Vector Double -- vector of coefficients
@@ -54,6 +66,35 @@ focFunc bLow cs cdfs pdfs b =
       rs = DPV.fromList $ map (\x -> 1 / (b - x)) costs
       consts = NC.constant ((sum $ DPV.toList rs) / ((fromIntegral n) - 1)) n
   in NC.sub derivCosts $ NC.mul probs $ NC.sub consts rs
+
+-- Objective function
+objFunc :: Double   -- upper bound on bids
+  -> [Double]       -- list of lower extremities
+  -> [Double]       -- list of upper extremities
+  -> [Double]       -- parameters to estimate
+  -> Double         -- value of the objective
+objFunc bUpper lowers uppers params =
+  let bLow = head params
+      cs = DPV.fromList $ drop 1 params
+      cdfs = zipWith (\l u -> uniformCDF l u) lowers uppers
+      pdfs = zipWith (\l u -> uniformPDF l u) lowers uppers
+      bs = NC.linspace 100 (bLow, bUpper)
+      focSq b = NC.sumElements $ DPV.mapVector (^^2) $ focFunc bLow cs cdfs pdfs b
+      foc = NC.sumElements $ DPV.mapVector focSq bs
+  in foc
+
+-- Minimization
+main = do
+  let bUpper = 0.875
+  let w = 0.75
+  let reps = [0.25, 0.75]
+  let objective = objFunc bUpper (lowerExt w reps) (upperExt w reps)
+  let l1 = (lowerExt w reps) !! 1
+  let (s,p) = GSL.minimize GSL.NMSimplex2 1E-8 1000 (take 13 [1E-2,1E-2..]) objective (take 13 ([l1] ++ [1E-2,1E-2..]))
+  let bLow = head s
+  let cs = DPV.fromList $ drop 1 s
+  let bs = DPV.toList $ NC.linspace 100 (bLow, bUpper)
+  CHART.plotPDF "polynomial.pdf" bs (costFunc bLow $ DPV.subVector 0 6 cs) "-" (costFunc bLow $ DPV.subVector 6 6 cs) "- "
 
 -- Tests
 -- Test costFunc
