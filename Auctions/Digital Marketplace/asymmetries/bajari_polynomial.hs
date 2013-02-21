@@ -99,14 +99,14 @@ upperBoundFunc bLow bUpper vCs =
   in NC.sub costs consts
 
 -- Objective function
-objFunc :: Double   -- upper bound on bids
+objFunc :: Int      -- grid granularity
+  -> Double         -- upper bound on bids
   -> [Double]       -- list of lower extremities
   -> [Double]       -- list of upper extremities
   -> [Double]       -- parameters to estimate
   -> Double         -- value of the objective
-objFunc bUpper lowers uppers params =
-  let granularity = 100
-      bLow = head params
+objFunc granularity bUpper lowers uppers params =
+  let bLow = head params
       cs = DPV.fromList $ drop 1 params
       n = length cdfs
       m = DPV.dim cs `div` fromIntegral n
@@ -115,25 +115,27 @@ objFunc bUpper lowers uppers params =
       cdfs = zipWith uniformCDF lowers uppers
       pdfs = zipWith uniformPDF lowers uppers
       bs = NC.linspace granularity (bLow, bUpper)
-      focSq b = NC.sumElements $ DPV.mapVector (^^2) $ focFunc bLow vCs cdfs pdfs b
+      focSq b = NC.sumElements $ DPV.mapVector (**2) $ focFunc bLow vCs cdfs pdfs b
       foc = NC.sumElements $ DPV.mapVector focSq bs
-      lowerBound = NC.sumElements $ DPV.mapVector (^^2) $ lowerBoundFunc bLow vCs lowers
-      upperBound = NC.sumElements $ DPV.mapVector (^^2) $ upperBoundFunc bLow bUpper vCs
+      lowerBound = NC.sumElements $ DPV.mapVector (**2) $ lowerBoundFunc bLow vCs lowers
+      upperBound = NC.sumElements $ DPV.mapVector (**2) $ upperBoundFunc bLow bUpper vCs
   in foc + fromIntegral granularity * lowerBound + fromIntegral granularity * upperBound
 
 {-
   Impure (main) program goes here
 -}
 -- Minimization
+main :: IO b
 main = do
   let w = 0.52
   let reps = [0.5, 0.75]
   let lowers = lowerExt w reps
   let uppers = upperExt w reps
   let bUpper = upperBoundBidsFunc lowers uppers
-  let objective = objFunc bUpper lowers uppers
+  let granularity = 100
+  let objective = objFunc granularity bUpper lowers uppers
   let l1 = lowerExt w reps !! 1
-  let (s,p) = GSL.minimize GSL.NMSimplex2 1E-8 100000 (take 13 [1E-1,1E-1..]) objective (take 13 (l1 : [1E-2,1E-2..]))
+  let (s,_) = GSL.minimize GSL.NMSimplex2 1E-8 100000 (take 13 [1E-1,1E-1..]) objective (take 13 (l1 : [1E-2,1E-2..]))
   let bLow = head s
   putStr "Estimated lower bound on bids: "
   print bLow
@@ -145,14 +147,16 @@ main = do
   Specification of tests goes here
 -}
 -- Test costFunc
+testCostFunc :: HUNIT.Test
 testCostFunc = HUNIT.TestCase (do
   let err = 1E-8
   let xs = [0.0,0.1..1.0]
-  let expYs = map (\x -> x^2 - 0.5*x + 0.75) xs
+  let expYs = map (\x -> x**2 - 0.5*x + 0.75) xs
   let ys = map (costFunc 0.5 (DPV.fromList [0.25,0.5,1.0])) xs
   let cmp = all (== True) $ zipWith (\x y -> abs (x-y) < err) expYs ys
   HUNIT.assertBool "Testing costFunc: " cmp)
 -- Test derivCostFunc
+testDerivCostFunc :: HUNIT.Test
 testDerivCostFunc = HUNIT.TestCase (do
   let err = 1E-8
   let xs = [0.0,0.1..1.0]
@@ -161,5 +165,6 @@ testDerivCostFunc = HUNIT.TestCase (do
   let cmp = all (== True) $ zipWith (\x y -> abs (x-y) < err) expYs ys
   HUNIT.assertBool "Testing derivCostFunc: " cmp)
 
+tests :: HUNIT.Test
 tests = HUNIT.TestList [HUNIT.TestLabel "testCostFunc" testCostFunc,
                         HUNIT.TestLabel "testDerivCostFunc" testDerivCostFunc]
