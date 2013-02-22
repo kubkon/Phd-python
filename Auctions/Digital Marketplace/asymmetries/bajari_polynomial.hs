@@ -80,11 +80,11 @@ focFunc lowers bLow vCs cdfs pdfs b =
   in NC.sub derivCosts $ NC.mul probs $ NC.sub consts rs
 
 -- Lower boundary condition vector function
-lowerBoundFunc :: Double -- lower bound on bids
-  -> [DPV.Vector Double] -- list of vector of coefficients
-  -> [Double]            -- list of lower extremities
-  -> DPV.Vector Double   -- output lower boundary vector (to be minimized)
-lowerBoundFunc bLow vCs lowers =
+lowerBoundFunc :: [Double] -- list of lower extremities
+  -> Double                -- lower bound on bids
+  -> [DPV.Vector Double]   -- list of vector of coefficients
+  -> DPV.Vector Double     -- output lower boundary vector (to be minimized)
+lowerBoundFunc lowers bLow vCs =
   let costs = DPV.fromList $ map (\(l,x) -> costFunc l bLow x bLow) $ zip lowers vCs
       consts = DPV.fromList lowers
   in NC.sub costs consts
@@ -120,7 +120,7 @@ objFunc granularity bUpper lowers uppers params =
       bs = NC.linspace granularity (bLow, bUpper)
       focSq b = NC.sumElements $ DPV.mapVector (**2) $ focFunc lowers bLow vCs cdfs pdfs b
       foc = NC.sumElements $ DPV.mapVector focSq bs
-      lowerBound = NC.sumElements $ DPV.mapVector (**2) $ lowerBoundFunc bLow vCs lowers
+      lowerBound = NC.sumElements $ DPV.mapVector (**2) $ lowerBoundFunc lowers bLow vCs
       upperBound = NC.sumElements $ DPV.mapVector (**2) $ upperBoundFunc lowers bLow bUpper vCs
   in foc + fromIntegral granularity * lowerBound + fromIntegral granularity * upperBound
 
@@ -130,44 +130,44 @@ objFunc granularity bUpper lowers uppers params =
 -- Minimization
 main :: IO b
 main = do
-  let w = 0.52
-  let reps = [0.5, 0.75]
+  let w = 0.75
+  let reps = [0.25, 0.75]
   let lowers = lowerExt w reps
   let uppers = upperExt w reps
   let bUpper = upperBoundBidsFunc lowers uppers
-  let granularity = 1000
+  let granularity = 100
   let objective = objFunc granularity bUpper lowers uppers
   let l1 = lowers !! 1
-  let (s,_) = GSL.minimize GSL.NMSimplex2 1E-8 100000 (take 13 [1E-1,1E-1..]) objective (take 13 (l1 : [1E-2,1E-2..]))
+  let (s,_) = GSL.minimize GSL.NMSimplex2 1E-8 100000 (take 15 [1E-1,1E-1..]) objective (take 15 (l1 : [1E-2,1E-2..]))
   let bLow = head s
   putStr "Estimated lower bound on bids: "
   print bLow
   let cs = DPV.fromList $ drop 1 s
   let bs = DPV.toList $ NC.linspace 1000 (bLow, bUpper)
-  CHART.plotPDF "polynomial.pdf" bs (costFunc (head lowers) bLow $ DPV.subVector 0 6 cs) "-" (costFunc l1 bLow $ DPV.subVector 6 6 cs) "- "
+  CHART.plotPDF "polynomial.pdf" bs (costFunc (head lowers) bLow $ DPV.subVector 0 7 cs) "-" (costFunc l1 bLow $ DPV.subVector 7 7 cs) "- "
 
---{-
---  Specification of tests goes here
----}
----- Test costFunc
---testCostFunc :: HUNIT.Test
---testCostFunc = HUNIT.TestCase (do
---  let err = 1E-8
---  let xs = [0.0,0.1..1.0]
---  let expYs = map (\x -> x**2 - 0.5*x + 0.75) xs
---  let ys = map (costFunc 0.5 (DPV.fromList [0.25,0.5,1.0])) xs
---  let cmp = all (== True) $ zipWith (\x y -> abs (x-y) < err) expYs ys
---  HUNIT.assertBool "Testing costFunc: " cmp)
----- Test derivCostFunc
---testDerivCostFunc :: HUNIT.Test
---testDerivCostFunc = HUNIT.TestCase (do
---  let err = 1E-8
---  let xs = [0.0,0.1..1.0]
---  let expYs = map (\x -> 2*x - 0.5) xs
---  let ys = map (derivCostFunc 0.5 (DPV.fromList [0.25,0.5,1.0])) xs
---  let cmp = all (== True) $ zipWith (\x y -> abs (x-y) < err) expYs ys
---  HUNIT.assertBool "Testing derivCostFunc: " cmp)
+{-
+  Specification of tests goes here
+-}
+-- Test costFunc
+testCostFunc :: HUNIT.Test
+testCostFunc = HUNIT.TestCase (do
+  let err = 1E-8
+  let xs = [0.0,0.1..1.0]
+  let expYs = map (\x -> x**2 - 0.5*x + 0.75) xs
+  let ys = map (costFunc 0.5 0.5 (DPV.fromList [0.25,0.5,1.0])) xs
+  let cmp = all (== True) $ zipWith (\x y -> abs (x-y) < err) expYs ys
+  HUNIT.assertBool "Testing costFunc: " cmp)
+-- Test derivCostFunc
+testDerivCostFunc :: HUNIT.Test
+testDerivCostFunc = HUNIT.TestCase (do
+  let err = 1E-8
+  let xs = [0.0,0.1..1.0]
+  let expYs = map (\x -> 2*x - 0.5) xs
+  let ys = map (derivCostFunc 0.5 (DPV.fromList [0.25,0.5,1.0])) xs
+  let cmp = all (== True) $ zipWith (\x y -> abs (x-y) < err) expYs ys
+  HUNIT.assertBool "Testing derivCostFunc: " cmp)
 
---tests :: HUNIT.Test
---tests = HUNIT.TestList [HUNIT.TestLabel "testCostFunc" testCostFunc,
---                        HUNIT.TestLabel "testDerivCostFunc" testDerivCostFunc]
+tests :: HUNIT.Test
+tests = HUNIT.TestList [HUNIT.TestLabel "testCostFunc" testCostFunc,
+                        HUNIT.TestLabel "testDerivCostFunc" testDerivCostFunc]
