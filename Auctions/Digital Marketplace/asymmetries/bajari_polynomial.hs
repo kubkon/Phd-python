@@ -2,8 +2,8 @@ import qualified Data.Random.Distribution.Uniform as UNI
 import qualified Data.Packed.Vector as DPV
 import qualified Numeric.Container as NC
 import qualified Numeric.GSL.Minimization as GSL
-import qualified Graphics.Rendering.Chart.Simple as CHART
 import qualified Test.HUnit as HUNIT
+import qualified Data.String.Utils as UTILS
 
 -- Uniform CDF
 uniformCDF :: RealFrac a => a -> a -> a -> Double
@@ -128,23 +128,30 @@ objFunc granularity bUpper lowers uppers params =
   Impure (main) program goes here
 -}
 -- Minimization
-main :: IO b
+main :: IO ()
 main = do
-  let w = 0.75
-  let reps = [0.25, 0.75]
+  let w = 0.85
+  let reps = [0.25, 0.5, 0.75]
+  let n = length reps
+  let numCoeffs = 5
   let lowers = lowerExt w reps
   let uppers = upperExt w reps
   let bUpper = upperBoundBidsFunc lowers uppers
   let granularity = 100
   let objective = objFunc granularity bUpper lowers uppers
   let l1 = lowers !! 1
-  let (s,_) = GSL.minimize GSL.NMSimplex2 1E-8 100000 (take 15 [1E-1,1E-1..]) objective (take 15 (l1 : [1E-2,1E-2..]))
+  let initSizeBox = take (n*numCoeffs + 1) [1E-1,1E-1..]
+  let initConditions = take (n*numCoeffs + 1) (l1 : [1E-2,1E-2..])
+  let (s,_) = GSL.minimize GSL.NMSimplex2 1E-8 100000 initSizeBox objective initConditions
   let bLow = head s
-  putStr "Estimated lower bound on bids: "
-  print bLow
-  let cs = DPV.fromList $ drop 1 s
-  let bs = DPV.toList $ NC.linspace 1000 (bLow, bUpper)
-  CHART.plotPDF "polynomial.pdf" bs (costFunc (head lowers) bLow $ DPV.subVector 0 7 cs) "-" (costFunc l1 bLow $ DPV.subVector 7 7 cs) "- "
+  let vCs = DPV.fromList $ drop 1 s
+  let indexes = [0,numCoeffs..(numCoeffs*(n-1))]
+  let cs = map (DPV.toList . (\i -> DPV.subVector i numCoeffs vCs)) indexes
+  let filePath = "polynomial.out"
+  let fileContents = UTILS.join "\n" [
+        UTILS.join " " (["w", "reps", "b_lower", "b_upper"] ++ [UTILS.join "_" ["cs", show i] | i <- [0..n]]),
+        UTILS.join " " ([show w, show reps, show bLow, show bUpper] ++ [show c | c <- cs])]
+  writeFile filePath fileContents
 
 {-
   Specification of tests goes here
