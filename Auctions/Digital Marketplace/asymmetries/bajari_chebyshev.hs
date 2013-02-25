@@ -72,7 +72,7 @@ costFunc :: Double     -- lower extremity
   -> Double            -- corresponding cost value
 costFunc l (bLow, bUpper) cs b =
   let series = evalFirstKind cs $ shiftChebyshev (bLow, bUpper) b
-  in (bUpper - b) / (bUpper - bLow) * l + (b - bLow) * series
+  in ((bUpper - b) * l + (b - bLow) * bUpper) / (bUpper - bLow) + (b - bLow) * (bUpper - b) * series
 
 -- Derivative of cost function
 derivCostFunc :: Double -- lower extremity
@@ -85,7 +85,10 @@ derivCostFunc l bBounds@(bLow, bUpper) cs b =
       cs1 = drop 1 $ DPV.toList cs
       coeffs = DPV.fromList $ zipWith (*) cs1 [1.0..fromIntegral $ length cs1]
       secondSeries = evalSecondKind coeffs $ shiftChebyshev bBounds b
-  in firstSeries + 2*(b - bLow) / (bUpper - bLow) * secondSeries - l / (bUpper - bLow)
+      firstComponent = (bUpper + bLow - 2*b) * firstSeries
+      secondComponent = 2 * (b - bLow) * (bUpper - b) / (bUpper - bLow) * secondSeries
+      thirdComponent = (bUpper - l) / (bUpper - bLow)
+  in firstComponent + secondComponent + thirdComponent
 
 -- FoC vector function
 focFunc :: [Double]      -- list of lower extremities
@@ -162,11 +165,11 @@ main = do
   let lowers = lowerExt w reps
   let uppers = upperExt w reps
   let bUpper = upperBoundBidsFunc lowers uppers
-  let granularity = 40
+  let granularity = 100
   let objective = objFunc granularity bUpper lowers uppers
   let l1 = lowers !! 1
   let initSizeBox = take (n*numCoeffs + 1) [1E-2,1E-2..]
-  let initConditions = take (n*numCoeffs + 1) (l1 : [1E-2,1E-2..])
+  let initConditions = take (n*numCoeffs + 1) (l1 : [0.0,0.0..])
   let (s,_) = GSL.minimize GSL.NMSimplex2 1E-8 100000 initSizeBox objective initConditions
   let bLow = head s
   let vCs = DPV.fromList $ drop 1 s
