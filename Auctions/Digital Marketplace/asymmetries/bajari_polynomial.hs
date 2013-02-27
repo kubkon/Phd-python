@@ -4,6 +4,18 @@ import qualified Numeric.Container as NC
 import qualified Numeric.GSL.Minimization as GSL
 import qualified Test.HUnit as HUNIT
 import qualified Data.String.Utils as UTILS
+import qualified Foreign.Storable as FS
+
+-- Split list into list of sublists
+split :: (Num a, FS.Storable a)
+  => Int   -- length of a sublist
+  -> Int   -- desired number of sublist
+  -> [a]   -- input list
+  -> [[a]] -- output list of sublists
+split l n xs =
+  let vXs = DPV.fromList xs
+      indexes = [0,l..(l*(n-1))]
+  in map (DPV.toList . (\i -> DPV.subVector i l vXs)) indexes
 
 -- Uniform CDF
 uniformCDF :: RealFrac a => a -> a -> a -> Double
@@ -110,14 +122,14 @@ objFunc :: Int      -- grid granularity
   -> Double         -- value of the objective
 objFunc granularity bUpper lowers uppers params =
   let bLow = head params
-      cs = DPV.fromList $ drop 1 params
+      cs = drop 1 params
       n = length cdfs
-      m = DPV.dim cs `div` fromIntegral n
-      indexes = [0,m..(m*(n-1))]
-      vCs = map (\i -> DPV.subVector i m cs) indexes
+      m = length cs `div` fromIntegral n
+      vCs = map DPV.fromList $ split m n cs
       cdfs = zipWith uniformCDF lowers uppers
       pdfs = zipWith uniformPDF lowers uppers
-      bs = NC.linspace granularity (bLow, bUpper)
+      --bs = NC.linspace granularity (bLow, bUpper)
+      bs = NC.linspace granularity (bLow, head uppers)
       focSq b = NC.sumElements $ DPV.mapVector (**2) $ focFunc lowers bLow vCs cdfs pdfs b
       foc = NC.sumElements $ DPV.mapVector focSq bs
       lowerBound = NC.sumElements $ DPV.mapVector (**2) $ lowerBoundFunc lowers bLow vCs
@@ -128,26 +140,47 @@ objFunc granularity bUpper lowers uppers params =
   Impure (main) program goes here
 -}
 -- Minimization
+minimizeObj :: Int
+  -> Int
+  -> Int
+  -> ([Double] -> Double)
+  -> [Double]
+  -> [Double]
+  -> IO [Double]
+minimizeObj n i j objective params sizeBox = do
+  let (s,_) = GSL.minimize GSL.NMSimplex2 1E-8 100000 sizeBox objective params
+  print s
+  if i == j
+    then return s
+    else do
+      let b = head s
+      let i' = i+1
+      let sizeBox' = take (n*i' + 1) [1E-5,1E-5..]
+      let cs' = split i n $ drop 1 s
+      let params' = b : concatMap (++ [1E-2]) cs'
+      minimizeObj n i' j objective params' sizeBox'
+
+-- Main
 main :: IO ()
 main = do
   let w = 0.85
   let reps = [0.25, 0.5, 0.75]
   let n = length reps
-  let numCoeffs = 5
+  let numCoeffs = 3
+  let desiredNumCoeffs = 10
   let lowers = lowerExt w reps
   let uppers = upperExt w reps
   let bUpper = upperBoundBidsFunc lowers uppers
+  --let bUpper = head uppers
   let granularity = 100
   let objective = objFunc granularity bUpper lowers uppers
   let l1 = lowers !! 1
   let initSizeBox = take (n*numCoeffs + 1) [1E-1,1E-1..]
   let initConditions = take (n*numCoeffs + 1) (l1 : [1E-2,1E-2..])
-  let (s,_) = GSL.minimize GSL.NMSimplex2 1E-8 100000 initSizeBox objective initConditions
+  s <- minimizeObj n numCoeffs desiredNumCoeffs objective initConditions initSizeBox
   let bLow = head s
-  let vCs = DPV.fromList $ drop 1 s
-  let indexes = [0,numCoeffs..(numCoeffs*(n-1))]
-  let cs = map (DPV.toList . (\i -> DPV.subVector i numCoeffs vCs)) indexes
-  let filePath = "polynomial.out"
+  let cs = split desiredNumCoeffs n $ drop 1 s
+  let filePath = "polynomial2.out"
   let fileContents = UTILS.join "\n" [
         UTILS.join " " (["w", "reps", "b_lower", "b_upper"] ++ [UTILS.join "_" ["cs", show i] | i <- [0..n]]),
         UTILS.join " " ([show w, show reps, show bLow, show bUpper] ++ [show c | c <- cs])]
