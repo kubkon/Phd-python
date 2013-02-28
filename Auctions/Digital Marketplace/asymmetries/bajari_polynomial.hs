@@ -1,10 +1,9 @@
-import qualified Data.Random.Distribution.Uniform as UNI
-import qualified Data.Packed.Vector as DPV
 import qualified Numeric.Container as NC
 import qualified Numeric.GSL.Minimization as GSL
 import qualified Test.HUnit as HUNIT
 import qualified Data.String.Utils as UTILS
 import qualified Foreign.Storable as FS
+import qualified Bajari as B
 
 -- Split list into list of sublists
 split :: (Num a, FS.Storable a)
@@ -13,122 +12,102 @@ split :: (Num a, FS.Storable a)
   -> [a]   -- input list
   -> [[a]] -- output list of sublists
 split l n xs =
-  let vXs = DPV.fromList xs
+  let vXs = NC.fromList xs
       indexes = [0,l..(l*(n-1))]
-  in map (DPV.toList . (\i -> DPV.subVector i l vXs)) indexes
-
--- Uniform CDF
-uniformCDF :: RealFrac a => a -> a -> a -> Double
-uniformCDF = UNI.realUniformCDF
-
--- Lower extremities
-lowerExt :: Double -- price weight (w)
-  -> [Double]      -- list of reputations
-  -> [Double]      -- corresponding list of lower extremities
-lowerExt w = map (\r -> (1-w)*r)
-
--- Upper extremities
-upperExt :: Double -- price weight (w)
-  -> [Double]      -- list of reputations
-  -> [Double]      -- corresponding list of upper extremities
-upperExt w reps = map (+w) $ lowerExt w reps
-
--- Upper bound on bids
-upperBoundBidsFunc :: [Double] -- list of lower extremities
-  -> [Double]                  -- list of upper extremities
-  -> Double                    -- output estimate on upper bound on bids
-upperBoundBidsFunc lowers uppers =
-  let bs = NC.linspace 10000 (head uppers, uppers !! 1)
-      cdfs = zipWith uniformCDF (drop 1 lowers) (drop 1 uppers)
-      negCdfs x = map (\cdf -> 1 - cdf x) cdfs
-      objective x = (x - head uppers) * product (negCdfs x)
-  in NC.atIndex bs $ NC.maxIndex $ DPV.mapVector objective bs
+  in map (NC.toList . (\i -> NC.subVector i l vXs)) indexes
 
 -- (Scalar) cost function
-costFunc :: Double     -- lower extremity
+costFunc ::
+  Double               -- lower extremity
   -> Double            -- lower bound on bids
-  -> DPV.Vector Double -- vector of coefficients
+  -> NC.Vector Double  -- vector of coefficients
   -> Double            -- bid value
   -> Double            -- corresponding cost value
 costFunc l bLow cs b =
-  let k = DPV.dim cs
-      bs = DPV.fromList $ zipWith (^) (take k [(b-bLow),(b-bLow)..]) [0..(k-1)]
+  let k = NC.dim cs
+      bs = NC.fromList $ zipWith (^) (take k [(b-bLow),(b-bLow)..]) [0..(k-1)]
   in l + NC.dot cs bs
 
 -- Derivative of cost function
-derivCostFunc :: Double -- lower bound on bids
-  -> DPV.Vector Double  -- vector of coefficients
-  -> Double             -- bids value
-  -> Double             -- corresponding cost value
+derivCostFunc ::
+  Double               -- lower bound on bids
+  -> NC.Vector Double  -- vector of coefficients
+  -> Double            -- bids value
+  -> Double            -- corresponding cost value
 derivCostFunc bLow cs b =
-  let k = DPV.dim cs
+  let k = NC.dim cs
       ps = zipWith (^) (take k [(b-bLow),(b-bLow)..]) (0 : [0..(k-2)])
-      bs = DPV.fromList $ zipWith (\x y -> x * fromIntegral y) ps [0..(k-1)]
+      bs = NC.fromList $ zipWith (\x y -> x * fromIntegral y) ps [0..(k-1)]
   in NC.dot cs bs
 
 -- FoC vector function
-focFunc :: [Double]      -- list of lower extremities
-  -> [Double]            -- list of upper extremities
-  -> Double              -- lower bound on bids
-  -> [DPV.Vector Double] -- list of vector of coefficients
-  -> Double              -- bid value
-  -> DPV.Vector Double   -- output FoC vector (to be minimized)
+focFunc ::
+  [Double]              -- list of lower extremities
+  -> [Double]           -- list of upper extremities
+  -> Double             -- lower bound on bids
+  -> [NC.Vector Double] -- list of vector of coefficients
+  -> Double             -- bid value
+  -> NC.Vector Double   -- output FoC vector (to be minimized)
 focFunc lowers uppers bLow vCs b =
   let n = length lowers
       costs = map (\(l,x) -> costFunc l bLow x b) $ zip lowers vCs
-      derivCosts = DPV.fromList $ map (\x -> derivCostFunc bLow x b) vCs
-      probs = DPV.fromList $ zipWith (-) uppers costs
-      rs = DPV.fromList $ map (\x -> 1 / (b - x)) costs
-      consts = NC.constant (sum (DPV.toList rs) / (fromIntegral n - 1)) n
+      derivCosts = NC.fromList $ map (\x -> derivCostFunc bLow x b) vCs
+      probs = NC.fromList $ zipWith (-) uppers costs
+      rs = NC.fromList $ map (\x -> 1 / (b - x)) costs
+      consts = NC.constant (sum (NC.toList rs) / (fromIntegral n - 1)) n
   in NC.sub derivCosts $ NC.mul probs $ NC.sub consts rs
 
 -- Lower boundary condition vector function
-lowerBoundFunc :: [Double] -- list of lower extremities
-  -> Double                -- lower bound on bids
-  -> [DPV.Vector Double]   -- list of vector of coefficients
-  -> DPV.Vector Double     -- output lower boundary vector (to be minimized)
+lowerBoundFunc ::
+  [Double]              -- list of lower extremities
+  -> Double             -- lower bound on bids
+  -> [NC.Vector Double] -- list of vector of coefficients
+  -> NC.Vector Double   -- output lower boundary vector (to be minimized)
 lowerBoundFunc lowers bLow vCs =
-  let costs = DPV.fromList $ map (\(l,x) -> costFunc l bLow x bLow) $ zip lowers vCs
-      consts = DPV.fromList lowers
+  let costs = NC.fromList $ map (\(l,x) -> costFunc l bLow x bLow) $ zip lowers vCs
+      consts = NC.fromList lowers
   in NC.sub costs consts
 
 -- Upper boundary condition vector function
-upperBoundFunc :: [Double] -- list of lower extremities
-  -> Double                -- lower bound on bids
-  -> Double                -- upper bound on bids
-  -> [DPV.Vector Double]   -- list of vector of coefficients
-  -> DPV.Vector Double     -- output upper boundary vector (to be minimized)
+upperBoundFunc ::
+  [Double]              -- list of lower extremities
+  -> Double             -- lower bound on bids
+  -> Double             -- upper bound on bids
+  -> [NC.Vector Double] -- list of vector of coefficients
+  -> NC.Vector Double   -- output upper boundary vector (to be minimized)
 upperBoundFunc lowers bLow bUpper vCs =
   let n = length vCs
-      costs = DPV.fromList $ map (\(l,x) -> costFunc l bLow x bUpper) $ zip lowers vCs
+      costs = NC.fromList $ map (\(l,x) -> costFunc l bLow x bUpper) $ zip lowers vCs
       consts = NC.constant bUpper n
   in NC.sub costs consts
 
 -- Objective function
-objFunc :: Int      -- grid granularity
-  -> Double         -- upper bound on bids
-  -> [Double]       -- list of lower extremities
-  -> [Double]       -- list of upper extremities
-  -> [Double]       -- parameters to estimate
-  -> Double         -- value of the objective
+objFunc ::
+  Int         -- grid granularity
+  -> Double   -- upper bound on bids
+  -> [Double] -- list of lower extremities
+  -> [Double] -- list of upper extremities
+  -> [Double] -- parameters to estimate
+  -> Double   -- value of the objective
 objFunc granularity bUpper lowers uppers params =
   let bLow = head params
       cs = drop 1 params
       n = length lowers
       m = length cs `div` fromIntegral n
-      vCs = map DPV.fromList $ split m n cs
+      vCs = map NC.fromList $ split m n cs
       bs = NC.linspace granularity (bLow, bUpper)
-      focSq b = NC.sumElements $ DPV.mapVector (**2) $ focFunc lowers uppers bLow vCs b
-      foc = NC.sumElements $ DPV.mapVector focSq bs
-      lowerBound = NC.sumElements $ DPV.mapVector (**2) $ lowerBoundFunc lowers bLow vCs
-      upperBound = NC.sumElements $ DPV.mapVector (**2) $ upperBoundFunc lowers bLow bUpper vCs
+      focSq b = NC.sumElements $ NC.mapVector (**2) $ focFunc lowers uppers bLow vCs b
+      foc = NC.sumElements $ NC.mapVector focSq bs
+      lowerBound = NC.sumElements $ NC.mapVector (**2) $ lowerBoundFunc lowers bLow vCs
+      upperBound = NC.sumElements $ NC.mapVector (**2) $ upperBoundFunc lowers bLow bUpper vCs
   in foc + fromIntegral granularity * lowerBound + fromIntegral granularity * upperBound
 
 {-
   Impure (main) program goes here
 -}
 -- Minimization
-minimizeObj :: Int
+minimizeObj ::
+  Int
   -> Int
   -> Int
   -> ([Double] -> Double)
@@ -151,17 +130,17 @@ minimizeObj n i j objective params sizeBox = do
 -- Main
 main :: IO ()
 main = do
-  let w = 0.85
-  let reps = [0.25, 0.5, 0.75]
+  let w = 0.86
+  let reps = [0.35, 0.56, 0.87]
   let n = length reps
   let numCoeffs = 3
   let desiredNumCoeffs = 10
-  let lowers = lowerExt w reps
-  let uppers = upperExt w reps
-  let bUpper = upperBoundBidsFunc lowers uppers
+  let lowers = B.lowerExt w reps
+  let uppers = B.upperExt w reps
+  let bUpper = B.upperBoundBidsFunc lowers uppers
   let granularity = 100
   let objective = objFunc granularity bUpper lowers uppers
-  let l1 = lowers !! 1
+  let l1 = lowers !! 1 + 0.0001
   let initSizeBox = take (n*numCoeffs + 1) [1E-1,1E-1..]
   let initConditions = take (n*numCoeffs + 1) (l1 : [1E-2,1E-2..])
   s <- minimizeObj n numCoeffs desiredNumCoeffs objective initConditions initSizeBox
@@ -182,7 +161,7 @@ testCostFunc = HUNIT.TestCase (do
   let err = 1E-8
   let xs = [0.0,0.1..1.0]
   let expYs = map (\x -> x**2 - 0.5*x + 0.75) xs
-  let ys = map (costFunc 0.5 0.5 (DPV.fromList [0.25,0.5,1.0])) xs
+  let ys = map (costFunc 0.5 0.5 (NC.fromList [0.25,0.5,1.0])) xs
   let cmp = all (== True) $ zipWith (\x y -> abs (x-y) < err) expYs ys
   HUNIT.assertBool "Testing costFunc: " cmp)
 -- Test derivCostFunc
@@ -191,7 +170,7 @@ testDerivCostFunc = HUNIT.TestCase (do
   let err = 1E-8
   let xs = [0.0,0.1..1.0]
   let expYs = map (\x -> 2*x - 0.5) xs
-  let ys = map (derivCostFunc 0.5 (DPV.fromList [0.25,0.5,1.0])) xs
+  let ys = map (derivCostFunc 0.5 (NC.fromList [0.25,0.5,1.0])) xs
   let cmp = all (== True) $ zipWith (\x y -> abs (x-y) < err) expYs ys
   HUNIT.assertBool "Testing derivCostFunc: " cmp)
 
