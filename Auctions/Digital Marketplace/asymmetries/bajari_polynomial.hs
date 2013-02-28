@@ -21,13 +21,6 @@ split l n xs =
 uniformCDF :: RealFrac a => a -> a -> a -> Double
 uniformCDF = UNI.realUniformCDF
 
--- Uniform PDF
-uniformPDF :: RealFrac a => a -> a -> a -> Double
-uniformPDF a b x
-  | b < a = uniformPDF b a x
-  | x <= a || x >= b = 0
-  | otherwise = realToFrac (1 / (b-a))
-
 -- Lower extremities
 lowerExt :: Double -- price weight (w)
   -> [Double]      -- list of reputations
@@ -75,18 +68,16 @@ derivCostFunc bLow cs b =
 
 -- FoC vector function
 focFunc :: [Double]      -- list of lower extremities
+  -> [Double]            -- list of upper extremities
   -> Double              -- lower bound on bids
   -> [DPV.Vector Double] -- list of vector of coefficients
-  -> [Double -> Double]  -- list of CDFs
-  -> [Double -> Double]  -- list of PDFs
   -> Double              -- bid value
   -> DPV.Vector Double   -- output FoC vector (to be minimized)
-focFunc lowers bLow vCs cdfs pdfs b =
-  let n = length cdfs
+focFunc lowers uppers bLow vCs b =
+  let n = length lowers
       costs = map (\(l,x) -> costFunc l bLow x b) $ zip lowers vCs
       derivCosts = DPV.fromList $ map (\x -> derivCostFunc bLow x b) vCs
-      zips = zip cdfs pdfs
-      probs = DPV.fromList $ zipWith (\x (c,p) -> (1 - c x) / p x) costs zips
+      probs = DPV.fromList $ zipWith (-) uppers costs
       rs = DPV.fromList $ map (\x -> 1 / (b - x)) costs
       consts = NC.constant (sum (DPV.toList rs) / (fromIntegral n - 1)) n
   in NC.sub derivCosts $ NC.mul probs $ NC.sub consts rs
@@ -123,14 +114,11 @@ objFunc :: Int      -- grid granularity
 objFunc granularity bUpper lowers uppers params =
   let bLow = head params
       cs = drop 1 params
-      n = length cdfs
+      n = length lowers
       m = length cs `div` fromIntegral n
       vCs = map DPV.fromList $ split m n cs
-      cdfs = zipWith uniformCDF lowers uppers
-      pdfs = zipWith uniformPDF lowers uppers
-      --bs = NC.linspace granularity (bLow, bUpper)
-      bs = NC.linspace granularity (bLow, head uppers)
-      focSq b = NC.sumElements $ DPV.mapVector (**2) $ focFunc lowers bLow vCs cdfs pdfs b
+      bs = NC.linspace granularity (bLow, bUpper)
+      focSq b = NC.sumElements $ DPV.mapVector (**2) $ focFunc lowers uppers bLow vCs b
       foc = NC.sumElements $ DPV.mapVector focSq bs
       lowerBound = NC.sumElements $ DPV.mapVector (**2) $ lowerBoundFunc lowers bLow vCs
       upperBound = NC.sumElements $ DPV.mapVector (**2) $ upperBoundFunc lowers bLow bUpper vCs
@@ -155,7 +143,7 @@ minimizeObj n i j objective params sizeBox = do
     else do
       let b = head s
       let i' = i+1
-      let sizeBox' = take (n*i' + 1) [1E-5,1E-5..]
+      let sizeBox' = take (n*i' + 1) [1E-2,1E-2..]
       let cs' = split i n $ drop 1 s
       let params' = b : concatMap (++ [1E-2]) cs'
       minimizeObj n i' j objective params' sizeBox'
@@ -171,7 +159,6 @@ main = do
   let lowers = lowerExt w reps
   let uppers = upperExt w reps
   let bUpper = upperBoundBidsFunc lowers uppers
-  --let bUpper = head uppers
   let granularity = 100
   let objective = objFunc granularity bUpper lowers uppers
   let l1 = lowers !! 1
