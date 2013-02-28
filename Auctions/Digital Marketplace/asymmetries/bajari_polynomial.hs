@@ -133,20 +133,20 @@ main = do
   let w = 0.86
   let reps = [0.35, 0.56, 0.87]
   let n = length reps
-  let numCoeffs = 3
-  let desiredNumCoeffs = 10
+  let numCoeffs = 5
+  let desiredNumCoeffs = 12
   let lowers = B.lowerExt w reps
   let uppers = B.upperExt w reps
   let bUpper = B.upperBoundBidsFunc lowers uppers
   let granularity = 100
   let objective = objFunc granularity bUpper lowers uppers
-  let l1 = lowers !! 1 + 0.0001
+  let l1 = lowers !! 1
   let initSizeBox = take (n*numCoeffs + 1) [1E-1,1E-1..]
   let initConditions = take (n*numCoeffs + 1) (l1 : [1E-2,1E-2..])
   s <- minimizeObj n numCoeffs desiredNumCoeffs objective initConditions initSizeBox
   let bLow = head s
   let cs = split desiredNumCoeffs n $ drop 1 s
-  let filePath = "polynomial2.out"
+  let filePath = "polynomial.out"
   let fileContents = UTILS.join "\n" [
         UTILS.join " " (["w", "reps", "b_lower", "b_upper"] ++ [UTILS.join "_" ["cs", show i] | i <- [0..n]]),
         UTILS.join " " ([show w, show reps, show bLow, show bUpper] ++ [show c | c <- cs])]
