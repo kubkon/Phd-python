@@ -20,7 +20,7 @@ focFunc uppers t ys =
 -- Forward shooting method
 forwardShooting ::
   Double                                              -- upper bound on bids
-  -> (NC.Vector Double -> NC.Matrix Double)           -- list of lower extremities
+  -> (Double -> NC.Vector Double -> NC.Matrix Double) -- ODE solver
   -> Double                                           -- desired error
   -> (Double -> NC.Vector Double)                     -- grid function
   -> Double                                           -- lower bound on estimate
@@ -28,7 +28,9 @@ forwardShooting ::
   -> IO (Double, NC.Matrix Double)                    -- tuple of estimate and matrix of solutions
 forwardShooting bUpper odeSolver err ts low high = do
   let guess = 0.5 * (low + high)
-  let s = odeSolver $ ts guess
+  let tss = ts guess
+  let step = 0.01 * (tss NC.@> 1 - tss NC.@> 0)
+  let s = odeSolver step tss
   if high - low < err
     then return (guess, s)
     else do
@@ -44,14 +46,14 @@ forwardShooting bUpper odeSolver err ts low high = do
 -- Main
 main :: IO ()
 main = do
-  let w = 0.5
-  let reps = [0.25, 0.75]
+  let w = 0.85
+  let reps = [0.5, 0.6, 0.75]
   let lowers = B.lowerExt w reps
   let uppers = B.upperExt w reps
   let bUpper = B.upperBoundBidsFunc lowers uppers
-  let ts low = NC.linspace 1000 (low, bUpper)
+  let ts low = NC.linspace 1000 (low, bUpper-0.05)
   let xdot = focFunc (NC.fromList uppers)
-  let odeSolver = ODE.odeSolveV ODE.RKf45 0.01 1E-5 1E-5 xdot (NC.fromList lowers)
+  let odeSolver step = ODE.odeSolveV ODE.RKf45 step 1.49012E-8 1.49012E-8 xdot (NC.fromList lowers)
   let low = lowers !! 1
   let high = bUpper
   let err = 1E-6
