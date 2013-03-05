@@ -1,7 +1,7 @@
 import Control.Applicative
 import qualified Numeric.GSL.ODE as ODE
 import qualified Numeric.Container as NC
-import qualified Data.CSV as CSV
+import qualified Data.String.Utils as UTILS
 import qualified Bajari as B
 
 -- FoC vector function
@@ -38,7 +38,7 @@ forwardShooting bUpper odeSolver err ts low high = do
       let costs = map NC.toList $ NC.toColumns s
       let inits = map head costs
       let condition1 = concat $ zipWith (\l c -> map (\x -> l <= x && x <= bUpper) c) inits costs
-      let condition2 = concatMap (zipWith (>=) bids) costs
+      let condition2 = concatMap (zipWith (>) bids) costs
       if and (condition1 ++ condition2)
         then forwardShooting bUpper odeSolver err ts low guess
         else forwardShooting bUpper odeSolver err ts guess high
@@ -48,6 +48,7 @@ main :: IO ()
 main = do
   let w = 0.85
   let reps = [0.5, 0.6, 0.75]
+  let n = length reps
   let lowers = B.lowerExt w reps
   let uppers = B.upperExt w reps
   let bUpper = B.upperBoundBidsFunc lowers uppers
@@ -59,10 +60,9 @@ main = do
   let err = 1E-6
   (bLow, s) <- forwardShooting bUpper odeSolver err ts low high
   let bids = NC.toList $ ts bLow
-  let values = bids : map NC.toList (NC.toColumns s)
-  let struct = replicate (1 + NC.rows s) []
-  let csvVals = getZipList $ foldr ((\acc x -> (:) <$> acc <*> x) . ZipList) (ZipList struct) values
-  let writeToCSV = CSV.genCsvFile . map (map show)
-  let csvString = writeToCSV csvVals
+  let costs = map (show . NC.toList) $ NC.toColumns s
   let filePath = "ode.out"
-  writeFile filePath csvString
+  let labels = UTILS.join " " (["w", "reps", "bids"] ++ [UTILS.join "_" ["costs", show i] | i <- [0..n-1]])
+  let values = UTILS.join " " ([show w, show reps, show bids] ++ costs)
+  let fileContents = UTILS.join "\n" [labels, values]
+  writeFile filePath fileContents

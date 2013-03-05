@@ -124,14 +124,14 @@ minimizeObj n i j objective params sizeBox = do
       let i' = i+1
       let sizeBox' = take (n*i' + 1) [1E-2,1E-2..]
       let cs' = split i n $ drop 1 s
-      let params' = b : concatMap (++ [1E-2]) cs'
+      let params' = b : concatMap (++ [1E-5]) cs'
       minimizeObj n i' j objective params' sizeBox'
 
 -- Main
 main :: IO ()
 main = do
-  let w = 0.86
-  let reps = [0.35, 0.56, 0.87]
+  let w = 0.85
+  let reps = [0.5, 0.6, 0.75]
   let n = length reps
   let numCoeffs = 5
   let desiredNumCoeffs = 12
@@ -142,13 +142,13 @@ main = do
   let objective = objFunc granularity bUpper lowers uppers
   let l1 = lowers !! 1
   let initSizeBox = take (n*numCoeffs + 1) [1E-1,1E-1..]
-  let initConditions = take (n*numCoeffs + 1) (l1 : [1E-2,1E-2..])
+  let initConditions = take (n*numCoeffs + 1) (l1 : [1E-5,1E-5..])
   s <- minimizeObj n numCoeffs desiredNumCoeffs objective initConditions initSizeBox
   let bLow = head s
   let cs = split desiredNumCoeffs n $ drop 1 s
   let filePath = "polynomial.out"
   let fileContents = UTILS.join "\n" [
-        UTILS.join " " (["w", "reps", "b_lower", "b_upper"] ++ [UTILS.join "_" ["cs", show i] | i <- [0..n]]),
+        UTILS.join " " (["w", "reps", "b_lower", "b_upper"] ++ [UTILS.join "_" ["cs", show i] | i <- [0..n-1]]),
         UTILS.join " " ([show w, show reps, show bLow, show bUpper] ++ [show c | c <- cs])]
   writeFile filePath fileContents
 
