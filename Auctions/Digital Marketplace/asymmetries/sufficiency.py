@@ -65,7 +65,6 @@ objective_func = lambda x: (x - upper_extremities[0])*fts.reduce(lambda p, r: p*
 tabulated = [objective_func(v) for v in vals]
 maximum = max(tabulated)
 b_upper = min([v for v, i in zip(vals, range(len(vals))) if tabulated[i] == maximum])
-print(b_upper)
 
 # Parse the rest of the data
 try:
@@ -95,7 +94,7 @@ except NameError:
   bids = np.linspace(bs[0], bs[1], 10000)
   cost_funcs = [fts.partial(cost_func, l, cs) for l,cs in zip(lower_extremities, css)]
   costs = [[f(b) for b in bids] for f in cost_funcs]
-  step = len(bids) // 1000
+  step = len(bids) // 50
   s_costs, s_bids = verify_sufficiency(costs, bids, b_upper, cdfs, step=step)
 
 # Plot

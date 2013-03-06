@@ -39,14 +39,15 @@ forwardShooting bUpper odeSolver err ts low high = do
       let inits = map head costs
       let condition1 = concat $ zipWith (\l c -> map (\x -> l <= x && x <= bUpper) c) inits costs
       let condition2 = concatMap (zipWith (>) bids) costs
-      if and (condition1 ++ condition2)
+      let condition3 = zipWith (<) bids $ drop 1 bids
+      if and (condition1 ++ condition2 ++ condition3)
         then forwardShooting bUpper odeSolver err ts low guess
         else forwardShooting bUpper odeSolver err ts guess high
 
 -- Main
 main :: IO ()
 main = do
-  let w = 0.85
+  let w = 0.75
   let reps = [0.5, 0.6, 0.75]
   let n = length reps
   let lowers = B.lowerExt w reps

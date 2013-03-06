@@ -130,10 +130,10 @@ minimizeObj n i j objective params sizeBox = do
 -- Main
 main :: IO ()
 main = do
-  let w = 0.85
+  let w = 0.75
   let reps = [0.5, 0.6, 0.75]
   let n = length reps
-  let numCoeffs = 5
+  let numCoeffs = 3
   let desiredNumCoeffs = 12
   let lowers = B.lowerExt w reps
   let uppers = B.upperExt w reps
