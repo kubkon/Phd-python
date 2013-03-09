@@ -1,9 +1,18 @@
 import argparse
 import csv
 import functools as fts
+import itertools as its
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib import rc
 import sys
+
+rc('font',**{'family':'sans-serif','sans-serif':['Gill Sans']})
+## for Palatino and other serif fonts use:
+#rc('font',**{'family':'serif','serif':['Palatino']))
+rc('text', usetex=True)
+matplotlib.rcParams.update({'font.size': 14, 'legend.fontsize': 14})
 
 def verify_sufficiency(costs, bids, b_upper, cdfs, step=100):
   n = len(lower_extremities)
@@ -98,25 +107,33 @@ except NameError:
   s_costs, s_bids = verify_sufficiency(costs, bids, b_upper, cdfs, step=step)
 
 # Plot
+styles = ['b', 'r--', 'g:', 'm-.']
+colors = ['b.', 'r.', 'g.', 'm.']
+
 plt.figure()
+sts = its.cycle(styles)
 for c in costs:
-  plt.plot(c, bids)
+  plt.plot(c, bids, next(sts))
 plt.grid()
-plt.xlim([0.0,1.0])
-plt.ylim([0.3,1.0])
-labels = ['Bidder {}'.format(i) for i in range(n)]
+plt.xlabel(r"Cost-hat, $\hat{c}_i$")
+plt.ylabel(r"Bid-hat, $\hat{b}_i$")
+labels = ['Network operator {}'.format(i) for i in range(1, n+1)]
 plt.legend(labels, loc='upper left')
 plt.savefig('approximation.pdf')
 
 plt.figure()
-for c in costs:
-  plt.plot(c, bids)
-for c, b in zip(s_costs, s_bids):
-  plt.plot(c, b, '.')
+sts = its.cycle(styles)
+clss = its.cycle(colors)
+for c, sc, sb in zip(costs, s_costs, s_bids):
+  plt.plot(c, bids, next(sts))
+  plt.plot(sc, sb, next(clss))
 plt.grid()
-plt.xlim([0.0,1.0])
-plt.ylim([0.3,1.0])
-labels = ['Bidder {}'.format(i) for i in range(n)]
-labels += ['BR {}'.format(i) for i in range(n)]
+plt.xlabel(r"Cost-hat, $\hat{c}_i$")
+plt.ylabel(r"Bid-hat, $\hat{b}_i$")
+labels_1 = ['NO {}'.format(i) for i in range(1, n+1)]
+labels_2 = ['NO {}: Best response'.format(i) for i in range(1, n+1)]
+labels = []
+for l1, l2 in zip(labels_1, labels_2):
+  labels += [l1, l2]
 plt.legend(labels, loc='upper left')
 plt.savefig('sufficiency.pdf')

@@ -20,11 +20,9 @@ import warnings
 import progressbar as pb
 
 
-rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-## for Palatino and other serif fonts use:
-#rc('font',**{'family':'serif','serif':['Palatino']))
+rc('font',**{'family':'sans-serif','sans-serif':['Gill Sans']})
 rc('text', usetex=True)
-matplotlib.rcParams.update({'font.size': 18})
+matplotlib.rcParams.update({'font.size': 14, 'legend.fontsize': 14})
 
 # Ignore RuntimeWarnings for now
 warnings.simplefilter("ignore", RuntimeWarning)
@@ -291,10 +289,10 @@ def plot_wrt_w(costs, reps):
   # Plot the results
   # Price vs weight
   plt.figure()
-  plt.plot(ws, t_bids1, '-', linewidth=2)
-  plt.plot(ws, t_bids2, '--', linewidth=2)
+  plt.plot(ws, t_bids1, '-', linewidth=1)
+  plt.plot(ws, t_bids2, '--', linewidth=1)
   plt.ylim([0, 5])
-  plt.annotate(r"$w_0$", xy=(0.265, 0.25), xycoords='data', xytext=(1,30), textcoords='offset points', arrowprops=dict(arrowstyle="->"), fontsize=18)
+  plt.annotate(r"$w_0$", xy=(0.265, 0.25), xycoords='data', xytext=(1,30), textcoords='offset points', arrowprops=dict(arrowstyle="->"))
   plt.xlabel(r"Price weight, $w$")
   plt.ylabel(r"Offered price, $b_i$")
   plt.legend(['Network operator 1', 'Network operator 2'], loc='upper right')
@@ -302,10 +300,10 @@ def plot_wrt_w(costs, reps):
   plt.savefig('1.pdf')
   # Compound bid vs weight
   plt.figure()
-  plt.plot(ws, c_bids1, '-', linewidth=2)
-  plt.plot(ws, c_bids2, '--', linewidth=2)
+  plt.plot(ws, c_bids1, '-', linewidth=1)
+  plt.plot(ws, c_bids2, '--', linewidth=1)
   plt.ylim([0, 1])
-  plt.annotate(r"$w_c$", xy=(0.365, 0.605), xycoords='data', xytext=(1,30), textcoords='offset points', arrowprops=dict(arrowstyle="->"), fontsize=18)
+  plt.annotate(r"$w_c$", xy=(0.365, 0.605), xycoords='data', xytext=(1,30), textcoords='offset points', arrowprops=dict(arrowstyle="->"))
   plt.xlabel(r"Price weight, $w$")
   plt.ylabel(r"Compound bid, $\beta(b_i, r_i)$")
   plt.legend(['Network operator 1', 'Network operator 2'], loc='upper left')
@@ -313,15 +311,15 @@ def plot_wrt_w(costs, reps):
   plt.savefig('2.pdf')
   # Winning prices vs weight
   plt.figure()
-  plt.plot(win_w_1, win_prices_1, '-', linewidth=2)
-  plt.plot(win_w_2, win_prices_2, '--', linewidth=2)
+  plt.plot(win_w_1, win_prices_1, '-', linewidth=1)
+  plt.plot(win_w_2, win_prices_2, '--', linewidth=1)
   plt.ylim([0, 5])
   if costs[0] == 0.15:
-    plt.plot(1.0, (costs[0]+1)/2, 'x', markeredgecolor='k', markeredgewidth=2)
-    plt.annotate(r"Lowest price", xy=(1.0, 0.575), xycoords='data', xytext=(-100,45), textcoords='offset points', arrowprops=dict(arrowstyle="->"), fontsize=18)
+    plt.plot(1.0, (costs[0]+1)/2, 'x', markeredgecolor='k', markeredgewidth=1)
+    plt.annotate(r"Lowest price", xy=(1.0, 0.575), xycoords='data', xytext=(-100,45), textcoords='offset points', arrowprops=dict(arrowstyle="->"))
   elif costs[0] == 0.75:
-    plt.plot(0.375, 0.36, 'x', markeredgecolor='k', markeredgewidth=2)
-    plt.annotate(r"Lowest price", xy=(0.375, 0.375), xycoords='data', xytext=(5,45), textcoords='offset points', arrowprops=dict(arrowstyle="->"), fontsize=18)
+    plt.plot(0.375, 0.36, 'x', markeredgecolor='k', markeredgewidth=1)
+    plt.annotate(r"Lowest price", xy=(0.375, 0.375), xycoords='data', xytext=(5,45), textcoords='offset points', arrowprops=dict(arrowstyle="->"))
   plt.xlabel(r"Price weight, $w$")
   plt.ylabel(r"Price, $p(w)$")
   plt.legend(['Network operator 1', 'Network operator 2'], loc='upper right')
