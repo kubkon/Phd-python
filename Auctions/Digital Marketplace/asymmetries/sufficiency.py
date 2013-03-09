@@ -94,7 +94,7 @@ except NameError:
   bids = np.linspace(bs[0], bs[1], 10000)
   cost_funcs = [fts.partial(cost_func, l, cs) for l,cs in zip(lower_extremities, css)]
   costs = [[f(b) for b in bids] for f in cost_funcs]
-  step = len(bids) // 50
+  step = len(bids) // 100
   s_costs, s_bids = verify_sufficiency(costs, bids, b_upper, cdfs, step=step)
 
 # Plot

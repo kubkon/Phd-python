@@ -130,8 +130,8 @@ minimizeObj n i j objective params sizeBox = do
 -- Main
 main :: IO ()
 main = do
-  let w = 0.75
-  let reps = [0.5, 0.6, 0.75]
+  let w = 0.9
+  let reps = [0.01, 0.02, 0.5, 0.9]
   let n = length reps
   let numCoeffs = 3
   let desiredNumCoeffs = 12
@@ -142,7 +142,7 @@ main = do
   let objective = objFunc granularity bUpper lowers uppers
   let l1 = lowers !! 1
   let initSizeBox = take (n*numCoeffs + 1) [1E-1,1E-1..]
-  let initConditions = take (n*numCoeffs + 1) (l1 : [1E-5,1E-5..])
+  let initConditions = take (n*numCoeffs + 1) (l1 : [1E-2,1E-2..])
   s <- minimizeObj n numCoeffs desiredNumCoeffs objective initConditions initSizeBox
   let bLow = head s
   let cs = split desiredNumCoeffs n $ drop 1 s
