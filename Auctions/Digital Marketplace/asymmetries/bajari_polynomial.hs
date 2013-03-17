@@ -25,7 +25,7 @@ costFunc ::
   -> Double            -- corresponding cost value
 costFunc l bLow cs b =
   let k = NC.dim cs
-      bs = NC.fromList $ zipWith (^) (take k [(b-bLow),(b-bLow)..]) [0..(k-1)]
+      bs = NC.fromList $ zipWith (^) (take k [(b-bLow),(b-bLow)..]) [1..k]
   in l + NC.dot cs bs
 
 -- Derivative of cost function
@@ -36,8 +36,8 @@ derivCostFunc ::
   -> Double            -- corresponding cost value
 derivCostFunc bLow cs b =
   let k = NC.dim cs
-      ps = zipWith (^) (take k [(b-bLow),(b-bLow)..]) (0 : [0..(k-2)])
-      bs = NC.fromList $ zipWith (\x y -> x * fromIntegral y) ps [0..(k-1)]
+      ps = zipWith (^) (take k [(b-bLow),(b-bLow)..]) [0..(k-1)]
+      bs = NC.fromList $ zipWith (\x y -> x * fromIntegral y) ps [1..k]
   in NC.dot cs bs
 
 -- FoC vector function
@@ -56,17 +56,6 @@ focFunc lowers uppers bLow vCs b =
       rs = NC.fromList $ map (\x -> 1 / (b - x)) costs
       consts = NC.constant (sum (NC.toList rs) / (fromIntegral n - 1)) n
   in NC.sub derivCosts $ NC.mul probs $ NC.sub consts rs
-
--- Lower boundary condition vector function
-lowerBoundFunc ::
-  [Double]              -- list of lower extremities
-  -> Double             -- lower bound on bids
-  -> [NC.Vector Double] -- list of vector of coefficients
-  -> NC.Vector Double   -- output lower boundary vector (to be minimized)
-lowerBoundFunc lowers bLow vCs =
-  let costs = NC.fromList $ map (\(l,x) -> costFunc l bLow x bLow) $ zip lowers vCs
-      consts = NC.fromList lowers
-  in NC.sub costs consts
 
 -- Upper boundary condition vector function
 upperBoundFunc ::
@@ -98,22 +87,21 @@ objFunc granularity bUpper lowers uppers params =
       bs = NC.linspace granularity (bLow, bUpper)
       focSq b = NC.sumElements $ NC.mapVector (**2) $ focFunc lowers uppers bLow vCs b
       foc = NC.sumElements $ NC.mapVector focSq bs
-      lowerBound = NC.sumElements $ NC.mapVector (**2) $ lowerBoundFunc lowers bLow vCs
       upperBound = NC.sumElements $ NC.mapVector (**2) $ upperBoundFunc lowers bLow bUpper vCs
-  in foc + fromIntegral granularity * lowerBound + fromIntegral granularity * upperBound
+  in foc + fromIntegral granularity * upperBound
 
 {-
   Impure (main) program goes here
 -}
 -- Minimization
 minimizeObj ::
-  Int
-  -> Int
-  -> Int
-  -> ([Double] -> Double)
-  -> [Double]
-  -> [Double]
-  -> IO [Double]
+  Int                     -- number of bidders
+  -> Int                  -- current number of polynomial coefficients per bidder
+  -> Int                  -- desired number of polynomial coefficients per bidder
+  -> ([Double] -> Double) -- objective function
+  -> [Double]             -- initial values for the parameters to estimate
+  -> [Double]             -- initial size of the search box
+  -> IO [Double]          -- minimized parameters
 minimizeObj n i j objective params sizeBox = do
   let (s,_) = GSL.minimize GSL.NMSimplex2 1E-8 100000 sizeBox objective params
   print s
@@ -124,23 +112,23 @@ minimizeObj n i j objective params sizeBox = do
       let i' = i+1
       let sizeBox' = take (n*i' + 1) [1E-2,1E-2..]
       let cs' = split i n $ drop 1 s
-      let params' = b : concatMap (++ [1E-5]) cs'
+      let params' = b : concatMap (++ [1E-6]) cs'
       minimizeObj n i' j objective params' sizeBox'
 
 -- Main
 main :: IO ()
 main = do
-  let w = 0.9
-  let reps = [0.01, 0.02, 0.5, 0.9]
+  let w = 0.75
+  let reps = [0.25, 0.5, 0.75]
   let n = length reps
   let numCoeffs = 3
-  let desiredNumCoeffs = 12
+  let desiredNumCoeffs = 6
   let lowers = B.lowerExt w reps
   let uppers = B.upperExt w reps
   let bUpper = B.upperBoundBidsFunc lowers uppers
   let granularity = 100
   let objective = objFunc granularity bUpper lowers uppers
-  let l1 = lowers !! 1
+  let l1 = (lowers !! 1) + 1E-3
   let initSizeBox = take (n*numCoeffs + 1) [1E-1,1E-1..]
   let initConditions = take (n*numCoeffs + 1) (l1 : [1E-2,1E-2..])
   s <- minimizeObj n numCoeffs desiredNumCoeffs objective initConditions initSizeBox

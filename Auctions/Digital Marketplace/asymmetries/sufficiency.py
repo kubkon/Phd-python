@@ -93,17 +93,17 @@ except KeyError:
 # Verify sufficiency
 cdfs = [fts.partial(F, bounds) for bounds in zip(lower_extremities, upper_extremities)]
 try:
-  step = len(bids) // 100
+  step = len(bids) // 10
   s_costs, s_bids = verify_sufficiency(costs, bids, b_upper, cdfs, step=step)
 except NameError:
   # Define inverse bid function
   def cost_func(l, cs, x):
-    return l + sum([c*(x-bs[0])**i for c,i in zip(cs, range(len(cs)))])
+    return l + sum([c*(x-bs[0])**i for c,i in zip(cs, range(1,len(cs)+1))])
   # Compute bids and costs
   bids = np.linspace(bs[0], bs[1], 10000)
   cost_funcs = [fts.partial(cost_func, l, cs) for l,cs in zip(lower_extremities, css)]
   costs = [[f(b) for b in bids] for f in cost_funcs]
-  step = len(bids) // 100
+  step = len(bids) // 10
   s_costs, s_bids = verify_sufficiency(costs, bids, b_upper, cdfs, step=step)
 
 # Plot
