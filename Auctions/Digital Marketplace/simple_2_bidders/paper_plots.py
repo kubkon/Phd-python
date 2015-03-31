@@ -40,7 +40,7 @@ def plot_unconstrained(types, rep):
 	plt.plot(w, prices[1], '--', linewidth=2)
 	plt.xlabel(r"Price weight, $w$")
 	plt.ylabel(r"Offered price, $b_i(c_i)$")
-	legend = [r"Bidder {0}".format(n+1) for n in range(2)]
+	legend = [r"Network operator {0}".format(n+1) for n in range(2)]
         plt.legend(legend, loc='upper right', prop={'size': 14})
         matplotlib.rcParams.update({'font.size': 14})
 	plt.grid()
@@ -55,7 +55,7 @@ def plot_unconstrained(types, rep):
 	plt.ylim([0, 1])
 	plt.xlabel(r"Price weight, $w$")
 	plt.ylabel(r"Compound bid, $\beta(b_i(c_i),r_i)=wb_i(c_i) + (1-w)r_i$")
-	legend = [r"Bidder {0}".format(n+1) for n in range(2)]
+	legend = [r"Network operator {0}".format(n+1) for n in range(2)]
         plt.legend(legend, loc='upper left', prop={'size': 14})
         matplotlib.rcParams.update({'font.size': 14})
 	plt.grid()
